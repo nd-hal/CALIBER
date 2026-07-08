@@ -1,0 +1,168 @@
+/* Admin UI — standalone stylesheet */
+
+.adm-center {
+  min-height: 100vh; display: flex; align-items: center;
+  justify-content: center; background: #f1f5f9;
+}
+
+.adm-shell {
+  height: 100vh; display: flex; flex-direction: column;
+  background: #f1f5f9; font-family: system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.adm-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; height: 56px;
+  background: #1e293b; color: #fff;
+}
+.adm-brand  { font-size: 15px; font-weight: 600; letter-spacing: .02em; }
+.adm-header-right { display: flex; align-items: center; gap: 14px; }
+.adm-user   { font-size: 13px; color: #94a3b8; }
+
+.adm-nav {
+  display: flex; gap: 2px; padding: 0 28px;
+  background: #fff; border-bottom: 1px solid #e2e8f0;
+}
+.adm-tab {
+  padding: 12px 18px; background: none; border: none; border-bottom: 2px solid transparent;
+  font-size: 14px; color: #64748b; cursor: pointer; transition: color .15s;
+}
+.adm-tab:hover  { color: #1e293b; }
+.adm-tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+.adm-tab-danger { color: #b91c1c; }
+.adm-tab-danger:hover { color: #991b1b; }
+.adm-tab-danger.active { color: #b91c1c; border-bottom-color: #b91c1c; }
+
+.adm-main  { flex: 1; overflow-y: auto; padding: 28px; width: 100%; max-width: 1800px; margin: 0 auto; display: flex; flex-direction: column; }
+
+/* Tab pattern: sticky stats + toolbar at top, only the table area scrolls.
+   Tabs that opt into this pattern (Progress / SONA Items / Time) lock the
+   outer scroll and manage their own internal scroll via .adm-scroll-area.
+   Tabs that DON'T use this pattern (Export, Insights, Config, etc.) keep
+   the default page scroll on .adm-main. */
+.adm-main:has(.adm-tab-flex) { overflow: hidden; }
+.adm-tab-flex   { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 0; }
+.adm-sticky-head { flex-shrink: 0; padding-bottom: 4px; }
+.adm-scroll-area { flex: 1; overflow-y: auto; min-height: 0; }
+/* Keep the table header pinned at the top of the scroll area */
+.adm-scroll-area .adm-table thead th { position: sticky; top: 0; z-index: 1; }
+
+.adm-card  {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 28px; display: flex; flex-direction: column; gap: 16px;
+}
+
+.adm-title { font-size: 22px; font-weight: 700; color: #1e293b; margin: 0 0 4px; }
+.adm-section-title { font-size: 16px; font-weight: 600; color: #1e293b; margin: 0 0 14px; }
+
+.adm-label {
+  display: flex; flex-direction: column; gap: 5px;
+  font-size: 13px; font-weight: 500; color: #374151;
+}
+.adm-input {
+  padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;
+  font-size: 14px; color: #111827; outline: none; transition: border-color .15s;
+  background: #fff;
+}
+.adm-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px #dbeafe; }
+.adm-hint    { font-size: 11.5px; color: #9ca3af; margin-top: 2px; }
+
+.adm-btn {
+  padding: 9px 20px; background: #2563eb; color: #fff;
+  border: none; border-radius: 7px; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: background .15s; align-self: flex-start;
+}
+.adm-btn:hover    { background: #1d4ed8; }
+.adm-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+
+.adm-btn-sm {
+  padding: 5px 14px; background: #f1f5f9; color: #374151;
+  border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;
+  cursor: pointer; transition: background .15s;
+}
+.adm-btn-sm:hover { background: #e2e8f0; }
+
+.adm-btn-danger {
+  padding: 3px 10px; background: transparent; color: #dc2626;
+  border: 1px solid #fca5a5; border-radius: 6px; font-size: 11.5px; font-weight: 600;
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.adm-btn-danger:hover    { background: #fef2f2; border-color: #dc2626; }
+.adm-btn-danger:disabled { opacity: .5; cursor: not-allowed; }
+
+.adm-error   { color: #dc2626; font-size: 13px; margin: 0; }
+.adm-success { color: #059669; font-size: 13px; margin: 0; }
+.adm-info    { color: #6b7280; font-size: 13px; }
+
+/* Stats row */
+.adm-stat-row { display: flex; gap: 16px; margin-bottom: 20px; }
+.adm-stat {
+  flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 18px 22px; display: flex; flex-direction: column; gap: 4px;
+}
+.adm-stat-val { font-size: 28px; font-weight: 700; color: #1e293b; }
+.adm-stat-lbl { font-size: 12px; color: #6b7280; }
+
+/* Table */
+.adm-table-wrap { overflow-x: auto; }
+.adm-table {
+  width: 100%; border-collapse: collapse; font-size: 13.5px;
+  background: #fff; border-radius: 8px; overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+.adm-table th {
+  padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 600;
+  color: #6b7280; text-transform: uppercase; letter-spacing: .04em;
+  background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+}
+.adm-table td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
+.adm-table tr:last-child td { border-bottom: none; }
+.adm-mono  { font-family: monospace; font-size: 12.5px; }
+.adm-muted { color: #9ca3af; }
+.adm-empty { color: #9ca3af; text-align: center; padding: 24px; }
+.adm-done  { color: #059669; font-weight: 600; }
+
+/* Badges */
+.adm-badge { padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.adm-badge-ok     { background: #d1fae5; color: #065f46; }
+.adm-badge-no     { background: #f1f5f9; color: #6b7280; }
+.adm-badge-online { background: #d1fae5; color: #065f46; }
+.adm-badge-recent { background: #fef3c7; color: #92400e; }
+
+.adm-subsection-title { font-size: 13px; font-weight: 600; color: #475569; margin: 0 0 10px; text-transform: uppercase; letter-spacing: .04em; }
+
+/* Role labels */
+.adm-role { padding: 2px 9px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.adm-role-super_admin { background: #fef3c7; color: #92400e; }
+.adm-role-admin       { background: #dbeafe; color: #1d4ed8; }
+
+/* Two-column layout */
+.adm-two-col { display: grid; grid-template-columns: 1fr 380px; gap: 28px; align-items: start; }
+@media (max-width: 900px) { .adm-two-col { grid-template-columns: 1fr; } }
+
+/* SONA Items toolbar */
+.adm-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.adm-search  { flex: 1; min-width: 200px; }
+
+/* Smaller table variant */
+.adm-table-sm th,
+.adm-table-sm td { padding: 8px 10px; font-size: 12.5px; }
+
+/* Eligible toggle */
+.adm-toggle {
+  padding: 3px 12px; border-radius: 20px; border: none;
+  font-size: 11.5px; font-weight: 600; cursor: pointer; transition: background .15s;
+}
+.adm-toggle:disabled { opacity: .5; cursor: not-allowed; }
+.adm-toggle-on  { background: #d1fae5; color: #065f46; }
+.adm-toggle-on:hover  { background: #a7f3d0; }
+.adm-toggle-off { background: #f1f5f9; color: #6b7280; }
+.adm-toggle-off:hover { background: #e2e8f0; }
+
+/* Check / cross indicators */
+.adm-check-ok { color: #059669; font-weight: 700; }
+.adm-check-no { color: #d1d5db; }
+
+/* Numeric / centered cell */
+.adm-num { text-align: center; font-variant-numeric: tabular-nums; }

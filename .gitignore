@@ -1,0 +1,45 @@
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+server/node_modules/
+
+# ── Secrets / environment ─────────────────────────────────────────────────────
+# Never commit real env files. .env.example (placeholders only) IS tracked.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ── Build output ──────────────────────────────────────────────────────────────
+# Amplify runs `npm run build`, so the built app never needs to be in git.
+dist/
+*.local
+
+# ── Research / participant data ───────────────────────────────────────────────
+# Behavioral-interview transcripts = human-subjects data. Keep out of the
+# public repo unless you have explicit IRB/consent approval to release it.
+Output.csv
+*.csv
+
+# ── AWS / infrastructure config (account IDs, profiles, deploy state) ─────────
+caliber-dynamodb-access.json
+/.elasticbeanstalk/app_versions/*
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+
+# ── Local tooling ─────────────────────────────────────────────────────────────
+.claude/settings.local.json
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+logs/
+
+# ── OS / editor cruft ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+MDs/

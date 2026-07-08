@@ -1,0 +1,3462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interview Annotation Tool</title>
+  <style>
+    :root {
+      --s-color: #3b82f6;
+      --t-color: #059669;
+      --a-color: #d97706;
+      --r-color: #7c3aed;
+      --s-bg: #dbeafe;
+      --t-bg: #d1fae5;
+      --a-bg: #fef3c7;
+      --r-bg: #ede9fe;
+      --border: #e5e7eb;
+      --panel-bg: #f9fafb;
+      --text: #111827;
+      --muted: #6b7280;
+      --light: #9ca3af;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f3f4f6;
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 13px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #111827;
+      color: white;
+      padding: 0 20px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .logo { font-size: 14px; font-weight: 600; color: white; letter-spacing: -0.01em; }
+    .logo em { color: #60a5fa; font-style: normal; }
+    .logo-sep { color: #374151; font-size: 18px; font-weight: 200; }
+
+    .pid-group { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .pid-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; }
+    #participantSelect {
+      padding: 4px 10px; border-radius: 6px; border: 1px solid #374151;
+      background: #1f2937; color: white; font-size: 13px; cursor: pointer; outline: none;
+    }
+    .hbtn {
+      height: 28px; padding: 0 12px; border-radius: 6px; border: none;
+      font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap;
+    }
+    .hbtn-ghost { background: #1f2937; color: #9ca3af; }
+    .hbtn-ghost:hover { background: #374151; color: white; }
+    .hbtn-blue { background: #2563eb; color: white; }
+    .hbtn-blue:hover { background: #1d4ed8; }
+    .hbtn-green { background: #059669 !important; color: white !important; }
+
+    /* ── Layout ── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Transcript panel ── */
+    .t-panel {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      background: white; border-right: 1px solid var(--border);
+    }
+
+    /* Tab bar */
+    .t-bar {
+      height: 40px; padding: 0 16px; background: var(--panel-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: stretch; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .q-tabs { display: flex; }
+    .q-tab {
+      padding: 0 16px; display: flex; align-items: center;
+      font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer;
+      border-bottom: 2px solid transparent; transition: color .12s;
+      white-space: nowrap; user-select: none;
+    }
+    .q-tab:hover { color: var(--text); }
+    .q-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+
+    .t-controls { display: flex; align-items: center; gap: 6px; }
+    .legend { display: flex; gap: 8px; align-items: center; margin-right: 4px; }
+    .ld { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); }
+    .ld-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .cbtn {
+      height: 26px; padding: 0 9px; border: 1px solid var(--border); border-radius: 5px;
+      background: white; font-size: 11px; font-weight: 500; color: var(--muted); cursor: pointer;
+      transition: all .1s;
+    }
+    .cbtn:hover { border-color: #9ca3af; color: var(--text); }
+    .cbtn.on { background: #2563eb; border-color: #2563eb; color: white; }
+
+    /* Transcript body */
+    .t-body { flex: 1; overflow-y: auto; padding: 28px 36px; }
+    .t-hint {
+      font-size: 11.5px; color: var(--light); margin-bottom: 18px;
+      display: flex; gap: 16px; flex-wrap: wrap;
+    }
+    .t-hint span::before { content: '·'; margin-right: 5px; }
+    .t-hint span:first-child::before { content: none; }
+    #transcript {
+      font-size: 15px; line-height: 2; color: #1f2937;
+      white-space: pre-wrap; word-wrap: break-word; outline: none; min-height: 80px;
+    }
+    #transcript[contenteditable="true"] {
+      border: 1.5px solid #3b82f6; border-radius: 8px; padding: 16px 20px;
+      background: #fafcff;
+    }
+    .example-badge {
+      display: inline-block; font-size: 10px; font-weight: 600; color: #9ca3af;
+      text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px;
+      background: #f3f4f6; border: 1px solid var(--border); border-radius: 4px;
+      padding: 2px 7px;
+    }
+
+    /* Highlights */
+    .hl { border-radius: 3px; cursor: pointer; }
+    .hl-s { background: var(--s-bg); border-bottom: 2px solid var(--s-color); }
+    .hl-t { background: var(--t-bg); border-bottom: 2px solid var(--t-color); }
+    .hl-a { background: var(--a-bg); border-bottom: 2px solid var(--a-color); }
+    .hl-r { background: var(--r-bg); border-bottom: 2px solid var(--r-color); }
+    .hl-badge {
+      display: inline-block; font-size: 8.5px; font-weight: 700; color: white;
+      padding: 0 3px; border-radius: 3px; margin-left: 2px;
+      vertical-align: super; line-height: 13px;
+    }
+    .hl-s .hl-badge { background: var(--s-color); }
+    .hl-t .hl-badge { background: var(--t-color); }
+    .hl-a .hl-badge { background: var(--a-color); }
+    .hl-r .hl-badge { background: var(--r-color); }
+
+    /* ── Popups ── */
+    .popup {
+      position: fixed; background: white; border-radius: 10px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 10px 15px -3px rgba(0,0,0,.1), 0 0 0 1px rgba(0,0,0,.05);
+      padding: 12px 14px; z-index: 9800; display: none;
+    }
+    .popup.show { display: block; }
+    .popup-title {
+      font-size: 10px; text-transform: uppercase; letter-spacing: .07em;
+      color: var(--light); margin-bottom: 9px; font-weight: 600;
+    }
+    .frame-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 210px; }
+    .fbtn {
+      padding: 7px 5px; border: none; border-radius: 6px; font-weight: 700;
+      font-size: 12px; cursor: pointer; color: white; text-align: center;
+    }
+    .fbtn:hover { filter: brightness(1.08); }
+    .fbtn-s { background: var(--s-color); }
+    .fbtn-t { background: var(--t-color); }
+    .fbtn-a { background: var(--a-color); }
+    .fbtn-r { background: var(--r-color); }
+    .fbtn-remove { background: #ef4444; font-weight: 500; grid-column: 1/-1; font-size: 11px; }
+
+    .tooltip {
+      position: fixed; background: #1f2937; color: white; padding: 6px 10px;
+      border-radius: 6px; font-size: 12px; max-width: 260px; z-index: 3000;
+      display: none; pointer-events: none; line-height: 1.5;
+      box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    }
+    .tooltip.show { display: block; }
+
+    /* ── Grading panel ── */
+    .g-panel {
+      width: 520px; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden;
+      background: var(--panel-bg);
+    }
+    .g-bar {
+      height: 40px; padding: 0 16px; background: var(--panel-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .05em; flex-shrink: 0;
+    }
+
+    /* ── Step wizard ── */
+    .g-inner { display: flex; flex: 1; overflow: hidden; }
+
+    .g-steps {
+      width: 106px; flex-shrink: 0; border-right: 1px solid var(--border);
+      padding: 18px 0 18px; display: flex; flex-direction: column; align-items: center;
+      background: #f9fafb; overflow-y: auto;
+    }
+    .gs-item {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 8px 6px; gap: 5px; width: 100%;
+    }
+    .gs-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid #d1d5db; display: flex; align-items: center;
+      justify-content: center; font-size: 11.5px; font-weight: 700;
+      color: #9ca3af; background: white; transition: all .2s; flex-shrink: 0;
+    }
+    .gs-label {
+      font-size: 10px; font-weight: 600; color: #9ca3af;
+      text-align: center; line-height: 1.3; transition: color .2s;
+    }
+    .gs-connector { width: 2px; height: 14px; background: #e5e7eb; }
+    .gs-item.gs-active .gs-num { border-color: #2563eb; background: #2563eb; color: white; }
+    .gs-item.gs-active .gs-label { color: #2563eb; }
+    .gs-item.gs-done .gs-num { border-color: #059669; background: #059669; color: white; }
+    .gs-item.gs-done .gs-label { color: #059669; }
+
+    .g-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .g-step-scroll { flex: 1; overflow-y: auto; padding: 16px 18px 12px; }
+    .g-step-panel { display: none; }
+    .g-step-panel.active { display: block; }
+
+    .g-step-title {
+      font-size: 12px; font-weight: 700; color: var(--text);
+      margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+    }
+    .g-step-instr {
+      font-size: 12px; color: var(--muted); line-height: 1.6;
+      background: #f8fafc; border: 1px solid var(--border); border-radius: 7px;
+      padding: 10px 12px; margin-bottom: 14px;
+    }
+    .g-star-legend { display: flex; flex-direction: column; gap: 6px; }
+    .g-legend-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; background: white; border: 1px solid var(--border); border-radius: 7px;
+    }
+    .g-legend-name { font-size: 12.5px; font-weight: 500; color: var(--text); }
+    .g-legend-desc { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+    .g-step-foot {
+      padding: 11px 18px; border-top: 1px solid var(--border);
+      background: #f9fafb; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: flex-end;
+    }
+    .g-next-btn {
+      height: 36px; padding: 0 22px; border: none; border-radius: 7px;
+      background: #1f2937; color: white; font-size: 12.5px; font-weight: 600;
+      cursor: pointer; transition: background .12s;
+    }
+    .g-next-btn:hover { background: #111827; }
+    .g-next-btn.g-btn-complete { background: #059669; }
+    .g-next-btn.g-btn-complete:hover { background: #047857; }
+
+    /* Confirmation dialog */
+    .cdlg-overlay {
+      position: fixed; inset: 0; z-index: 6000;
+      background: rgba(0,0,0,.5);
+      display: none; align-items: center; justify-content: center;
+    }
+    .cdlg-overlay.show { display: flex; }
+    .cdlg-box {
+      background: white; border-radius: 12px; padding: 22px 24px;
+      max-width: 380px; width: 90vw;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+    .cdlg-msg { font-size: 13.5px; color: var(--text); line-height: 1.65; margin-bottom: 18px; }
+    .cdlg-msg strong { color: #111827; }
+    .cdlg-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .cdlg-cancel {
+      height: 34px; padding: 0 16px; border: 1px solid var(--border); border-radius: 7px;
+      background: white; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer;
+    }
+    .cdlg-cancel:hover { border-color: #9ca3af; color: var(--text); }
+    .cdlg-ok {
+      height: 34px; padding: 0 18px; border: none; border-radius: 7px;
+      background: #2563eb; color: white; font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .cdlg-ok:hover { background: #1d4ed8; }
+
+    .g-sec { margin-bottom: 20px; }
+    .g-sec-title {
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+      color: var(--light); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .g-sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* STAR rows — single line */
+    .star-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 7px; margin-bottom: 4px; background: white;
+      border: 1px solid var(--border);
+    }
+    .star-row:last-child { margin-bottom: 0; }
+    .s-tag {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 5px; font-size: 11px;
+      font-weight: 700; color: white; flex-shrink: 0;
+    }
+    .tag-s { background: var(--s-color); }
+    .tag-t { background: var(--t-color); }
+    .tag-a { background: var(--a-color); }
+    .tag-r { background: var(--r-color); }
+    .s-name { font-size: 12px; font-weight: 500; color: var(--text); width: 60px; flex-shrink: 0; }
+
+    /* Yes/No */
+    .yn { display: flex; border: 1px solid var(--border); border-radius: 5px; overflow: hidden; flex-shrink: 0; }
+    .yn input { display: none; }
+    .yn label {
+      padding: 3px 8px; font-size: 11px; font-weight: 600; cursor: pointer;
+      color: var(--light); background: white; transition: all .1s; user-select: none;
+    }
+    .yn input[value="yes"]:checked + label { background: #059669; color: white; }
+    .yn input[value="no"]:checked + label { background: #ef4444; color: white; }
+
+    /* Score 1–5 */
+    .score-btns { display: flex; gap: 2px; margin-left: auto; }
+    .score-btns input { display: none; }
+    .score-btns label {
+      width: 26px; height: 26px; border: 1px solid var(--border); border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11.5px; font-weight: 600; cursor: pointer; color: var(--light);
+      background: white; transition: all .1s; user-select: none;
+    }
+    .score-btns label:hover { border-color: #9ca3af; color: var(--text); }
+    .score-btns input:checked + label { background: #2563eb; border-color: #2563eb; color: white; }
+
+    /* BARS */
+    .bars-prompt {
+      font-size: 12px; color: var(--muted); margin-bottom: 10px; font-style: italic;
+      line-height: 1.5; padding: 8px 10px; background: white; border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .bars-row { display: flex; gap: 4px; }
+    .bars-btn { flex: 1; }
+    .bars-btn input { display: none; }
+    .bars-btn label {
+      display: flex; flex-direction: column; align-items: center; padding: 7px 2px;
+      border: 1px solid var(--border); border-radius: 7px; cursor: pointer;
+      background: white; user-select: none; transition: all .1s;
+    }
+    .bars-btn label:hover { border-color: #9ca3af; }
+    .bars-num { font-size: 15px; font-weight: 700; color: var(--muted); }
+    .bars-lbl { font-size: 8.5px; color: var(--light); margin-top: 1px; text-align: center; }
+    .bars-btn input:checked + label { border-color: #2563eb; background: #eff6ff; }
+    .bars-btn input:checked + label .bars-num { color: #2563eb; }
+    .bars-btn input:checked + label .bars-lbl { color: #93c5fd; }
+
+    /* BARS ref */
+    .bars-ref { background: white; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+    .bars-ref-row {
+      display: flex; gap: 8px; padding: 7px 10px; border-bottom: 1px solid #f3f4f6;
+      font-size: 11.5px; align-items: baseline;
+    }
+    .bars-ref-row:last-child { border-bottom: none; }
+    .brs { font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+    .brd { color: var(--muted); line-height: 1.4; }
+
+    /* Summary */
+    .summary-box { background: white; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+    .sum-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 12px; border-bottom: 1px solid #f3f4f6; font-size: 12px; color: var(--muted);
+    }
+    .sum-row:last-child { border-bottom: none; }
+    .sum-val { font-weight: 700; color: var(--text); font-size: 12.5px; }
+    .sum-bars {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 9px 12px; background: #f9fafb; font-size: 13px; font-weight: 700; color: var(--text);
+      border-top: 1px solid var(--border);
+    }
+
+    /* Instructions modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 4000;
+      display: none; align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white; border-radius: 12px; width: 680px; max-width: 95vw;
+      max-height: 88vh; display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+    .modal-head {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .modal-head h2 { font-size: 15px; font-weight: 700; color: var(--text); }
+    .modal-close {
+      width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
+      background: white; cursor: pointer; font-size: 15px; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: #f3f4f6; }
+    .modal-body { overflow-y: auto; padding: 20px; }
+
+    .modal-section { margin-bottom: 24px; }
+    .modal-section:last-child { margin-bottom: 0; }
+    .modal-section-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+      color: var(--light); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* Frame definition cards */
+    .frame-defs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .frame-def {
+      border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px;
+      border-left-width: 3px;
+    }
+    .frame-def-head { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+    .frame-def-head .s-tag { width: 20px; height: 20px; font-size: 10px; border-radius: 4px; }
+    .frame-def-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .frame-def-body { font-size: 12px; color: var(--muted); line-height: 1.55; }
+    .frame-def-look { font-size: 11px; color: var(--light); margin-top: 5px; font-style: italic; line-height: 1.4; }
+
+    /* Example annotations */
+    .ex-transcript {
+      background: #f9fafb; border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 16px; font-size: 13.5px; line-height: 2;
+      color: #374151; margin-bottom: 12px;
+    }
+    .ex-list { display: flex; flex-direction: column; gap: 6px; }
+    .ex-item {
+      display: flex; gap: 9px; font-size: 12px; color: var(--muted); align-items: baseline;
+      padding: 7px 10px; background: #f9fafb; border-radius: 6px; border: 1px solid var(--border);
+      line-height: 1.5;
+    }
+    .ex-tag {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 3px; font-size: 9.5px;
+      font-weight: 700; color: white; flex-shrink: 0; margin-top: 1px;
+    }
+
+    /* STAR rubric table */
+    .rubric-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+    .rubric-tab {
+      height: 28px; padding: 0 12px; border: 1px solid var(--border); border-radius: 5px;
+      background: white; font-size: 12px; font-weight: 600; cursor: pointer;
+      color: var(--muted); transition: all .1s;
+    }
+    .rubric-tab:hover { border-color: #9ca3af; color: var(--text); }
+    .rubric-tab.active { color: white; border-color: transparent; }
+    .rubric-tab.rt-s.active { background: var(--s-color); }
+    .rubric-tab.rt-t.active { background: var(--t-color); }
+    .rubric-tab.rt-a.active { background: var(--a-color); }
+    .rubric-tab.rt-r.active { background: var(--r-color); }
+
+    .rubric-panel { display: none; }
+    .rubric-panel.active { display: block; }
+    .rubric-rows { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .rubric-row {
+      display: flex; gap: 0; border-bottom: 1px solid #f3f4f6;
+    }
+    .rubric-row:last-child { border-bottom: none; }
+    .rubric-score {
+      width: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; border-right: 1px solid #f3f4f6;
+      background: #fafafa;
+    }
+    .rubric-content { padding: 9px 12px; font-size: 12px; line-height: 1.5; }
+    .rubric-level { font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .rubric-desc { color: var(--muted); }
+
+    /* ── STAR Detail Rubric (inline panel) ── */
+    .srm-tabs {
+      display: flex; gap: 3px; margin-bottom: 6px;
+    }
+    .srm-tab {
+      flex: 1; height: 32px; border: 1.5px solid var(--border); border-radius: 7px;
+      background: white; cursor: pointer; font-size: 11px; font-weight: 600;
+      color: var(--muted); display: flex; align-items: center; justify-content: center;
+      gap: 5px; transition: all .12s; user-select: none;
+    }
+    .srm-tab:hover { border-color: #9ca3af; color: var(--text); }
+    .srm-tab-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .srm-tab-s .srm-tab-dot { background: var(--s-color); }
+    .srm-tab-t .srm-tab-dot { background: var(--t-color); }
+    .srm-tab-a .srm-tab-dot { background: var(--a-color); }
+    .srm-tab-r .srm-tab-dot { background: var(--r-color); }
+    .srm-tab-s.active { background: var(--s-bg); border-color: var(--s-color); color: var(--s-color); }
+    .srm-tab-t.active { background: var(--t-bg); border-color: var(--t-color); color: var(--t-color); }
+    .srm-tab-a.active { background: var(--a-bg); border-color: var(--a-color); color: var(--a-color); }
+    .srm-tab-r.active { background: var(--r-bg); border-color: var(--r-color); color: var(--r-color); }
+    .srm-tab.active .srm-tab-dot { opacity: 0; }
+    .srm-tab-s.active::before { content: 'S'; font-weight: 800; font-size: 12px; margin-right: 3px; color: var(--s-color); }
+    .srm-tab-t.active::before { content: 'T'; font-weight: 800; font-size: 12px; margin-right: 3px; color: var(--t-color); }
+    .srm-tab-a.active::before { content: 'A'; font-weight: 800; font-size: 12px; margin-right: 3px; color: var(--a-color); }
+    .srm-tab-r.active::before { content: 'R'; font-weight: 800; font-size: 12px; margin-right: 3px; color: var(--r-color); }
+
+    .srm-panel { display: none; }
+    .srm-panel.active { display: block; }
+
+    .srm-card {
+      border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden;
+    }
+    .srm-row {
+      display: flex; align-items: stretch; border-bottom: 1px solid #f3f4f6;
+      transition: background .15s, border-left .15s;
+      border-left: 3px solid transparent;
+    }
+    .srm-row:last-child { border-bottom: none; }
+
+    /* Score level colors */
+    .srm-num {
+      width: 34px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 800; border-right: 1px solid #f3f4f6;
+    }
+    .srm-num-5 { color: #059669; background: #f0fdf4; }
+    .srm-num-4 { color: #2563eb; background: #eff6ff; }
+    .srm-num-3 { color: #d97706; background: #fffbeb; }
+    .srm-num-2 { color: #ea580c; background: #fff7ed; }
+    .srm-num-1 { color: #dc2626; background: #fef2f2; }
+
+    .srm-body { padding: 7px 10px; flex: 1; min-width: 0; }
+    .srm-level { font-size: 11.5px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .srm-desc { font-size: 10.5px; color: var(--muted); line-height: 1.4; }
+
+    /* Highlighted row — selected score */
+    .srm-row.sel-s { background: var(--s-bg); border-left-color: var(--s-color); }
+    .srm-row.sel-s .srm-level { color: var(--s-color); }
+    .srm-row.sel-t { background: var(--t-bg); border-left-color: var(--t-color); }
+    .srm-row.sel-t .srm-level { color: var(--t-color); }
+    .srm-row.sel-a { background: var(--a-bg); border-left-color: var(--a-color); }
+    .srm-row.sel-a .srm-level { color: var(--a-color); }
+    .srm-row.sel-r { background: var(--r-bg); border-left-color: var(--r-color); }
+    .srm-row.sel-r .srm-level { color: var(--r-color); }
+
+    /* BARS anchor cards in Guide modal */
+    .bars-q-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+    .bars-q-tab {
+      flex: 1; height: 32px; border: 1.5px solid var(--border); border-radius: 7px;
+      background: white; cursor: pointer; font-size: 12px; font-weight: 600;
+      color: var(--muted); transition: all .12s; user-select: none;
+    }
+    .bars-q-tab:hover { border-color: #9ca3af; color: var(--text); }
+    .bars-q-tab.active { background: #111827; border-color: #111827; color: white; }
+    .bars-q-panel { display: none; }
+    .bars-q-panel.active { display: block; }
+
+    .bars-competency {
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+      color: var(--light); margin-bottom: 10px;
+    }
+    .bars-anchor-prompt {
+      font-size: 12.5px; color: #374151; font-style: italic; line-height: 1.5;
+      padding: 9px 12px; background: #f9fafb; border: 1px solid var(--border);
+      border-radius: 7px; margin-bottom: 12px;
+    }
+    .anchor-card {
+      border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .anchor-card:last-child { margin-bottom: 0; }
+    .anchor-head {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .anchor-score {
+      font-size: 20px; font-weight: 800; flex-shrink: 0; line-height: 1;
+    }
+    .anchor-label { font-size: 13px; font-weight: 700; }
+    .anchor-short { font-size: 11.5px; color: var(--muted); margin-left: auto; text-align: right; max-width: 200px; line-height: 1.4; }
+    .anchor-body { padding: 10px 12px; background: #fafafa; }
+    .anchor-quote {
+      font-size: 12.5px; font-style: italic; color: #374151; line-height: 1.6;
+      padding: 8px 12px; background: white; border-left: 3px solid var(--border);
+      border-radius: 0 5px 5px 0; margin-bottom: 6px;
+    }
+    .anchor-note { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    .anchor-between {
+      padding: 10px 12px; font-size: 12px; color: var(--muted); font-style: italic;
+      background: #fafafa; line-height: 1.4;
+    }
+
+    /* Grading rules callout boxes */
+    .rule-box {
+      display: flex; gap: 10px; padding: 10px 12px;
+      border: 1px solid var(--border); border-radius: 7px; margin-bottom: 6px;
+      background: white;
+    }
+    .rule-num {
+      width: 22px; height: 22px; border-radius: 50%; background: #111827; color: white;
+      font-size: 11px; font-weight: 700; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; margin-top: 1px;
+    }
+    .rule-text { font-size: 12.5px; color: #374151; line-height: 1.55; }
+    .rule-text strong { color: var(--text); }
+
+    /* ── Landing screen ── */
+    #landing {
+      position: fixed; inset: 0; z-index: 7000;
+      background: #0f172a;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0;
+    }
+    .landing-logo {
+      font-size: 13px; font-weight: 500; color: #475569;
+      text-transform: uppercase; letter-spacing: .12em; margin-bottom: 28px;
+    }
+    .landing-logo em { color: #60a5fa; font-style: normal; }
+    .landing-card {
+      background: white; border-radius: 14px; width: 420px;
+      box-shadow: 0 25px 60px rgba(0,0,0,.4);
+      overflow: hidden;
+    }
+    .landing-card-head {
+      background: #111827; padding: 24px 28px 20px;
+    }
+    .landing-card-head h2 {
+      font-size: 20px; font-weight: 700; color: white; margin-bottom: 4px;
+    }
+    .landing-card-head p {
+      font-size: 13px; color: #6b7280; line-height: 1.5;
+    }
+    .landing-card-body { padding: 24px 28px; }
+    .landing-field-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: #6b7280; margin-bottom: 7px;
+    }
+    .landing-select {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: 14px; color: var(--text); outline: none;
+      background: white; cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 34px;
+    }
+    .landing-select:focus { border-color: #3b82f6; }
+    .landing-new {
+      margin-top: 8px; font-size: 12px; color: #3b82f6; cursor: pointer;
+      background: none; border: none; padding: 0; font-family: inherit;
+    }
+    .landing-new:hover { text-decoration: underline; }
+    .landing-divider { height: 1px; background: var(--border); margin: 20px 0; }
+    .landing-continue {
+      width: 100%; height: 44px; border: none; border-radius: 8px;
+      background: #2563eb; color: white; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: background .12s; display: flex;
+      align-items: center; justify-content: center; gap: 8px;
+    }
+    .landing-continue:disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+    .landing-continue:not(:disabled):hover { background: #1d4ed8; }
+    .landing-footer {
+      font-size: 11px; color: #374151; margin-top: 10px; text-align: center;
+    }
+
+    /* ── Onboarding modal ── */
+    #onboardingModal {
+      position: fixed; inset: 0; z-index: 7100;
+      background: rgba(0,0,0,.65);
+      display: none; align-items: center; justify-content: center;
+    }
+    #onboardingModal.show { display: flex; }
+    .ob-modal {
+      background: white; border-radius: 14px; width: 760px; max-width: 96vw;
+      max-height: 92vh; display: flex; flex-direction: column;
+      box-shadow: 0 24px 64px rgba(0,0,0,.35);
+    }
+    .ob-head {
+      padding: 16px 24px 14px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0; gap: 16px;
+    }
+    .ob-head-left { flex: 1; min-width: 0; }
+    .ob-head-left h2 { font-size: 15px; font-weight: 700; color: var(--text); }
+    .ob-head-left p { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .ob-head-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .ob-stepper { display: flex; gap: 6px; align-items: center; }
+    .ob-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #e5e7eb;
+      cursor: pointer; transition: all .15s;
+    }
+    .ob-dot.active { background: #2563eb; width: 22px; border-radius: 4px; }
+    .ob-dot.done { background: #93c5fd; }
+    .ob-pid-badge {
+      font-size: 11px; font-weight: 700; background: #f1f5f9; border: 1px solid var(--border);
+      color: #475569; padding: 4px 10px; border-radius: 20px; white-space: nowrap;
+    }
+    .ob-body { overflow-y: auto; padding: 20px 24px; flex: 1; min-height: 0; }
+    .ob-step { display: none; }
+    .ob-step.active { display: block; }
+    .ob-instr {
+      font-size: 13px; color: #374151; line-height: 1.65;
+      padding: 12px 14px; background: #f8fafc; border: 1px solid var(--border);
+      border-radius: 8px; margin-bottom: 18px;
+    }
+    .ob-instr strong { color: var(--text); }
+    .ob-section-title {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--light); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .ob-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .ob-section { margin-bottom: 18px; }
+    .ob-example {
+      background: #f9fafb; border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 16px; font-size: 13px; line-height: 2; color: #374151;
+      margin-bottom: 10px;
+    }
+    /* STAR rubric rows for step 2 */
+    .ob-rtabs {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 0;
+      border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 14px;
+    }
+    .ob-rtab {
+      height: 36px; border: none; border-right: 1px solid var(--border);
+      background: #f9fafb; cursor: default; font-size: 12px; font-weight: 700;
+      color: var(--muted); user-select: none; pointer-events: none;
+    }
+    .ob-rtab:last-child { border-right: none; }
+    .ob-rtab.active.rt-s { background: var(--s-bg); color: var(--s-color); }
+    .ob-rtab.active.rt-t { background: var(--t-bg); color: var(--t-color); }
+    .ob-rtab.active.rt-a { background: var(--a-bg); color: var(--a-color); }
+    .ob-rtab.active.rt-r { background: var(--r-bg); color: var(--r-color); }
+    .ob-rpanel { display: none; }
+    .ob-rpanel.active { display: block; }
+    .ob-rrow {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 10px 14px; border-radius: 8px; margin-bottom: 6px;
+      border: 1px solid transparent;
+    }
+    .ob-rrow-5 { background: #f0fdf4; border-color: #bbf7d0; }
+    .ob-rrow-4 { background: #eff6ff; border-color: #bfdbfe; }
+    .ob-rrow-3 { background: #fffbeb; border-color: #fde68a; }
+    .ob-rrow-2 { background: #fff7ed; border-color: #fed7aa; }
+    .ob-rrow-1 { background: #fef2f2; border-color: #fecaca; }
+    .ob-rnum { font-size: 20px; font-weight: 800; width: 26px; flex-shrink: 0; line-height: 1.1; }
+    .ob-rnum-5 { color: #059669; }
+    .ob-rnum-4 { color: #2563eb; }
+    .ob-rnum-3 { color: #d97706; }
+    .ob-rnum-2 { color: #ea580c; }
+    .ob-rnum-1 { color: #dc2626; }
+    .ob-rlevel { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .ob-rdesc { font-size: 11.5px; color: #6b7280; line-height: 1.5; }
+    /* footer nav */
+    .ob-foot {
+      padding: 12px 24px; border-top: 1px solid var(--border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      background: #f9fafb; border-radius: 0 0 14px 14px; gap: 12px;
+    }
+    .ob-foot-left { display: flex; align-items: center; gap: 10px; }
+    .ob-nav-back {
+      height: 34px; padding: 0 16px; border: 1px solid var(--border); border-radius: 7px;
+      background: white; font-size: 12px; font-weight: 600; color: var(--muted);
+      cursor: pointer; transition: all .12s;
+    }
+    .ob-nav-back:hover { border-color: #9ca3af; color: var(--text); }
+    .ob-step-counter { font-size: 11px; color: var(--light); }
+    .ob-nav-next {
+      height: 34px; padding: 0 20px; border: none; border-radius: 7px;
+      background: #1f2937; color: white; font-size: 12.5px; font-weight: 600;
+      cursor: pointer; transition: background .12s;
+    }
+    .ob-nav-next:hover { background: #111827; }
+    .ob-begin {
+      height: 38px; padding: 0 24px; border: none; border-radius: 8px;
+      background: #2563eb; color: white; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background .12s;
+    }
+    .ob-begin:hover { background: #1d4ed8; }
+    .ob-nav-next:disabled, .ob-begin:disabled {
+      background: #d1d5db !important; color: #9ca3af !important; cursor: not-allowed !important;
+    }
+    .ob-nav-next:not(:disabled):hover { background: #111827; }
+    .ob-gate-hint { font-size: 11px; color: #9ca3af; text-align: right; white-space: nowrap; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+    /* ── Full-screen overlay system ── */
+    .screen { position: fixed; inset: 0; z-index: 8000; background: #0f172a; display: none; flex-direction: column; align-items: center; overflow-y: auto; }
+    .screen.active { display: flex; }
+    .screen-logo { font-size: 12px; font-weight: 500; color: #475569; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 26px; }
+    .screen-logo em { color: #60a5fa; font-style: normal; }
+
+    /* Welcome */
+    .wc-inner { width: 100%; max-width: 520px; padding: 52px 24px 60px; display: flex; flex-direction: column; align-items: center; }
+    .wc-card { background: white; border-radius: 16px; overflow: hidden; width: 100%; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
+    .wc-head { background: #111827; padding: 30px 32px 26px; }
+    .wc-head h2 { font-size: 22px; font-weight: 800; color: white; margin-bottom: 5px; }
+    .wc-head p { font-size: 13px; color: #6b7280; line-height: 1.6; }
+    .wc-body { padding: 24px 32px 28px; }
+    .wc-features { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
+    .wc-feature { display: flex; align-items: center; gap: 12px; font-size: 13px; color: #374151; padding: 9px 12px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border); }
+    .wc-num { width: 22px; height: 22px; border-radius: 50%; background: #1f2937; color: white; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .wc-begin { width: 100%; height: 46px; border: none; border-radius: 10px; background: #2563eb; color: white; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .12s; }
+    .wc-begin:hover { background: #1d4ed8; }
+
+    /* Survey */
+    .sv-inner { width: 100%; max-width: 560px; padding: 48px 24px 60px; display: flex; flex-direction: column; align-items: center; }
+    .sv-card { background: white; border-radius: 14px; padding: 28px 32px; width: 100%; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
+    .sv-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .sv-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 22px; line-height: 1.5; }
+    .sv-q { margin-bottom: 20px; }
+    .sv-q-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 9px; display: block; }
+    .sv-opts { display: flex; flex-direction: column; gap: 5px; }
+    .sv-opt { display: flex; align-items: center; gap: 10px; padding: 9px 13px; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--text); user-select: none; transition: all .1s; }
+    .sv-opt:hover { border-color: #93c5fd; background: #f0f9ff; }
+    .sv-opt.sel { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+    .sv-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #d1d5db; flex-shrink: 0; transition: all .1s; }
+    .sv-opt.sel .sv-dot { border-color: #2563eb; background: #2563eb; }
+    .sv-next { width: 100%; height: 44px; border: none; border-radius: 9px; background: #1f2937; color: white; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: background .12s; }
+    .sv-next:hover { background: #111827; }
+    .sv-note { font-size: 10.5px; color: var(--light); margin-top: 10px; text-align: center; }
+
+    /* Tutorial */
+    .tut-inner { width: 100%; max-width: 660px; padding: 36px 24px 52px; display: flex; flex-direction: column; align-items: center; }
+    .tut-card { background: white; border-radius: 14px; overflow: hidden; width: 100%; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
+    .tut-head { padding: 18px 26px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .tut-head-left h3 { font-size: 14px; font-weight: 700; color: var(--text); }
+    .tut-head-left p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .tut-dots { display: flex; gap: 5px; }
+    .tut-dot { width: 7px; height: 7px; border-radius: 50%; background: #e5e7eb; transition: all .15s; }
+    .tut-dot.active { background: #2563eb; width: 20px; border-radius: 4px; }
+    .tut-dot.done { background: #93c5fd; }
+    .tut-body { padding: 22px 26px 20px; overflow-y: auto; max-height: calc(100vh - 280px); }
+    .tut-step { display: none; }
+    .tut-step.active { display: block; }
+    .tut-step-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .tut-step-intro { font-size: 13px; color: var(--muted); line-height: 1.65; margin-bottom: 18px; }
+    .tut-star-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .tut-star-card { border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; border-left-width: 3px; }
+    .tut-star-head { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+    .tut-star-name { font-size: 12.5px; font-weight: 700; color: var(--text); }
+    .tut-star-def { font-size: 12px; color: var(--muted); line-height: 1.45; }
+    .tut-star-eg { font-size: 11px; color: var(--light); font-style: italic; margin-top: 4px; line-height: 1.4; }
+    .tut-example { background: #f9fafb; border: 1px solid var(--border); border-radius: 9px; padding: 14px 16px; font-size: 13.5px; line-height: 2.2; color: #374151; margin-bottom: 12px; }
+    .tut-hl { border-radius: 3px; padding: 1px 2px; }
+    .tut-hl-s { background: var(--s-bg); border-bottom: 2px solid var(--s-color); }
+    .tut-hl-t { background: var(--t-bg); border-bottom: 2px solid var(--t-color); }
+    .tut-hl-a { background: var(--a-bg); border-bottom: 2px solid var(--a-color); }
+    .tut-hl-r { background: var(--r-bg); border-bottom: 2px solid var(--r-color); }
+    .tut-hl-badge { display: inline-block; font-size: 8px; font-weight: 800; color: white; padding: 0 3px; border-radius: 3px; margin-left: 2px; vertical-align: super; line-height: 13px; }
+    .tut-hl-s .tut-hl-badge { background: var(--s-color); }
+    .tut-hl-t .tut-hl-badge { background: var(--t-color); }
+    .tut-hl-a .tut-hl-badge { background: var(--a-color); }
+    .tut-hl-r .tut-hl-badge { background: var(--r-color); }
+    .tut-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .tut-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--muted); }
+    .tut-legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .tut-how-list { display: flex; flex-direction: column; gap: 8px; }
+    .tut-how-item { display: flex; gap: 12px; padding: 11px 14px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; align-items: flex-start; }
+    .tut-how-num { width: 22px; height: 22px; border-radius: 50%; background: #1f2937; color: white; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .tut-how-text { font-size: 12.5px; color: #374151; line-height: 1.55; }
+    .tut-how-text strong { color: var(--text); }
+    .tut-flow-steps { display: flex; flex-direction: column; gap: 6px; }
+    .tut-flow-step { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: white; }
+    .tut-flow-badge { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #2563eb; color: #2563eb; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tut-flow-label { font-size: 12.5px; font-weight: 600; color: var(--text); }
+    .tut-flow-desc { font-size: 11.5px; color: var(--muted); margin-left: auto; text-align: right; }
+    .quiz-intro { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 18px; }
+    .quiz-q { margin-bottom: 20px; }
+    .quiz-q-text { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; line-height: 1.5; }
+    .quiz-opts { display: flex; flex-direction: column; gap: 6px; }
+    .quiz-opt { padding: 9px 13px; border: 1.5px solid var(--border); border-radius: 7px; font-size: 13px; color: var(--text); cursor: pointer; transition: all .12s; user-select: none; }
+    .quiz-opt:hover:not(.locked) { border-color: #93c5fd; background: #f0f9ff; }
+    .quiz-opt.sel { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+    .quiz-opt.correct { border-color: #059669; background: #f0fdf4; color: #065f46; pointer-events: none; }
+    .quiz-opt.wrong { border-color: #ef4444; background: #fef2f2; color: #991b1b; pointer-events: none; }
+    .quiz-check-btn { height: 36px; padding: 0 20px; border: none; border-radius: 7px; background: #1f2937; color: white; font-size: 12.5px; font-weight: 600; cursor: pointer; margin-top: 12px; transition: background .12s; }
+    .quiz-check-btn:hover { background: #111827; }
+    .quiz-check-btn:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; }
+    .quiz-result-bar { margin-top: 16px; font-size: 13px; font-weight: 600; padding: 10px 14px; border-radius: 8px; display: none; }
+    .quiz-result-bar.show { display: block; }
+    .quiz-result-bar.pass { background: #f0fdf4; color: #065f46; border: 1px solid #bbf7d0; }
+    .quiz-result-bar.fail { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .tut-foot { padding: 14px 26px; border-top: 1px solid var(--border); background: #f9fafb; display: flex; align-items: center; justify-content: space-between; }
+    .tut-back-btn { height: 34px; padding: 0 16px; border: 1px solid var(--border); border-radius: 7px; background: white; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all .12s; }
+    .tut-back-btn:hover { border-color: #9ca3af; color: var(--text); }
+    .tut-back-btn[disabled] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+    .tut-next-btn { height: 34px; padding: 0 20px; border: none; border-radius: 7px; background: #1f2937; color: white; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background .12s; }
+    .tut-next-btn:hover { background: #111827; }
+    .tut-next-btn[disabled] { background: #d1d5db; color: #9ca3af; cursor: not-allowed; pointer-events: none; }
+    .tut-counter { font-size: 11px; color: var(--light); }
+
+    /* Participant list */
+    .plist-inner { width: 100%; max-width: 800px; padding: 48px 24px 60px; }
+    .plist-hdr { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
+    .plist-hdr-left h2 { font-size: 20px; font-weight: 700; color: white; margin-bottom: 2px; }
+    .plist-hdr-left p { font-size: 13px; color: #6b7280; }
+    .plist-add-btn { height: 36px; padding: 0 16px; border: 1px solid #374151; border-radius: 8px; background: #1f2937; color: #9ca3af; font-size: 12.5px; font-weight: 500; cursor: pointer; transition: all .12s; white-space: nowrap; }
+    .plist-add-btn:hover { border-color: #4b5563; color: white; }
+    .plist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .plist-card { background: white; border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .plist-card-id { font-size: 16px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .plist-status { display: flex; flex-direction: column; gap: 5px; }
+    .plist-status-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--muted); }
+    .plist-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .plist-bd-done { background: #f0fdf4; color: #065f46; border: 1px solid #bbf7d0; }
+    .plist-bd-prog { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .plist-bd-none { background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
+    .plist-grade-btn { width: 100%; height: 36px; border: none; border-radius: 8px; background: #1f2937; color: white; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background .12s; margin-top: 4px; }
+    .plist-grade-btn:hover { background: #111827; }
+    .plist-empty { text-align: center; color: #475569; font-size: 14px; padding: 50px 20px; grid-column: 1/-1; }
+    .pid-indicator { font-size: 12px; font-weight: 600; color: white; background: #1f2937; padding: 3px 10px; border-radius: 6px; border: 1px solid #374151; }
+
+    /* ── Interactive Tour ── */
+    .tour-spotlight {
+      box-shadow: 0 0 0 5px #3b82f6, 0 0 0 9999px rgba(0,0,0,.65) !important;
+      position: relative !important;
+      z-index: 9600 !important;
+      border-radius: 8px !important;
+    }
+    #tourCard {
+      position: fixed; z-index: 9700; background: white; border-radius: 14px;
+      padding: 20px 22px; max-width: 310px; min-width: 260px;
+      box-shadow: 0 0 0 3px #3b82f6, 0 24px 48px rgba(0,0,0,.45);
+      border: 1px solid #93c5fd;
+      animation: tourCardPulse 2s ease-in-out infinite;
+    }
+    @keyframes tourCardPulse {
+      0%, 100% { box-shadow: 0 0 0 3px #3b82f6, 0 24px 48px rgba(0,0,0,.45); }
+      50%       { box-shadow: 0 0 0 5px #60a5fa, 0 0 24px 6px rgba(59,130,246,.35), 0 24px 48px rgba(0,0,0,.45); }
+    }
+    .tour-step-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #3b82f6; margin-bottom: 7px; }
+    .tour-msg { font-size: 13px; color: #111827; line-height: 1.6; margin-bottom: 14px; }
+    .tour-msg strong { color: #1d4ed8; }
+    .tour-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .tour-skip-btn { font-size: 11px; color: #9ca3af; background: none; border: none; cursor: pointer; padding: 0; }
+    .tour-skip-btn:hover { color: #6b7280; text-decoration: underline; }
+    .tour-progress { font-size: 11px; color: #9ca3af; }
+    .tour-action-btn { height: 32px; padding: 0 16px; border: none; border-radius: 7px; background: #2563eb; color: white; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .tour-action-btn:hover { background: #1d4ed8; }
+    .tour-arrow { position: fixed; z-index: 9650; width: 0; height: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Interview <em>Annotation</em> Tool</div>
+  <span class="logo-sep">|</span>
+  <select id="participantSelect" onchange="onParticipantChange(this.value)" style="display:none">
+    <option value="">— Select —</option>
+  </select>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+    <button class="hbtn" id="devResetBtn" onclick="devReset()" style="display:none;background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b;font-size:11px;">↺ Reset (dev)</button>
+  </div>
+  <div class="pid-group" id="headerPidGroup" style="display:none">
+    <span class="pid-label">Participant</span>
+    <span class="pid-indicator" id="pidIndicator">—</span>
+    <button class="hbtn hbtn-ghost" onclick="showParticipantList()">All Participants</button>
+    <button class="hbtn hbtn-ghost" onclick="downloadExport()">Export JSON</button>
+    <button class="hbtn hbtn-blue" onclick="openInstructions()">Guide</button>
+    <button class="hbtn hbtn-blue" id="saveBtn" onclick="saveData()">Save</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- Transcript -->
+  <div class="t-panel">
+    <div class="t-bar">
+      <div class="q-tabs">
+        <div class="q-tab active" id="tab-q1" onclick="switchQ('q1')">Q1 — Time Management</div>
+        <div class="q-tab" id="tab-q2" onclick="switchQ('q2')">Q2 — Prioritization</div>
+      </div>
+      <div class="t-controls">
+        <div class="legend">
+          <div class="ld"><div class="ld-dot" style="background:var(--s-color)"></div>Situation</div>
+          <div class="ld"><div class="ld-dot" style="background:var(--t-color)"></div>Task</div>
+          <div class="ld"><div class="ld-dot" style="background:var(--a-color)"></div>Action</div>
+          <div class="ld"><div class="ld-dot" style="background:var(--r-color)"></div>Result</div>
+        </div>
+        <button class="cbtn" onclick="openInstructions()" style="color:#2563eb;border-color:#bfdbfe;">Instructions</button>
+        <button class="cbtn" id="clearBtn" onclick="clearAnnotations()">Clear</button>
+      </div>
+    </div>
+    <div class="t-body">
+      <div class="t-hint">
+        <span>Drag to highlight → choose S / T / A / R</span>
+        <span>Click any highlight to relabel or remove</span>
+      </div>
+      <div id="transcript" contenteditable="false" spellcheck="false"></div>
+    </div>
+  </div>
+
+  <!-- Grading -->
+  <div class="g-panel">
+    <div class="g-bar" id="gradingHeader">Grading — Q1</div>
+    <div class="g-inner">
+
+      <!-- Step sidebar -->
+      <div class="g-steps">
+        <div class="gs-item gs-active" id="gsi-1">
+          <div class="gs-num">1</div>
+          <div class="gs-label">Annotate</div>
+        </div>
+        <div class="gs-connector"></div>
+        <div class="gs-item" id="gsi-2">
+          <div class="gs-num">2</div>
+          <div class="gs-label">Score 1–5</div>
+        </div>
+        <div class="gs-connector"></div>
+        <div class="gs-item" id="gsi-3">
+          <div class="gs-num">3</div>
+          <div class="gs-label">BARS</div>
+        </div>
+        <div class="gs-connector"></div>
+        <div class="gs-item" id="gsi-4">
+          <div class="gs-num">4</div>
+          <div class="gs-label">Present?</div>
+        </div>
+      </div>
+
+      <!-- Step content -->
+      <div class="g-content">
+        <div class="g-step-scroll">
+
+          <!-- Step 1: Annotate -->
+          <div class="g-step-panel active" id="gsp-1">
+            <div class="g-step-title">Step 1 of 4 — Annotate</div>
+            <div class="g-step-instr">Drag to select text in the transcript, then choose a STAR frame label. Highlight every span that belongs to each frame. A single sentence may carry multiple frames.</div>
+            <div class="g-star-legend">
+              <div class="g-legend-row">
+                <span class="s-tag tag-s">S</span>
+                <span class="g-legend-name">Situation</span>
+                <span class="g-legend-desc">Context, role, setting</span>
+              </div>
+              <div class="g-legend-row">
+                <span class="s-tag tag-t">T</span>
+                <span class="g-legend-name">Task</span>
+                <span class="g-legend-desc">Goal or deadline faced</span>
+              </div>
+              <div class="g-legend-row">
+                <span class="s-tag tag-a">A</span>
+                <span class="g-legend-name">Action</span>
+                <span class="g-legend-desc">Steps personally taken</span>
+              </div>
+              <div class="g-legend-row">
+                <span class="s-tag tag-r">R</span>
+                <span class="g-legend-name">Result</span>
+                <span class="g-legend-desc">Outcome achieved</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Score 1–5 -->
+          <div class="g-step-panel" id="gsp-2">
+            <div class="g-step-title">Step 2 of 4 — Score Each Frame (1–5)</div>
+            <div class="g-sec">
+              <div class="star-row">
+                <span class="s-tag tag-s">S</span>
+                <span class="s-name">Situation</span>
+                <div class="score-btns">
+                  <input type="radio" name="g_s_sc" id="s1" value="1" onchange="updateSummary()"><label for="s1">1</label>
+                  <input type="radio" name="g_s_sc" id="s2" value="2" onchange="updateSummary()"><label for="s2">2</label>
+                  <input type="radio" name="g_s_sc" id="s3" value="3" onchange="updateSummary()"><label for="s3">3</label>
+                  <input type="radio" name="g_s_sc" id="s4" value="4" onchange="updateSummary()"><label for="s4">4</label>
+                  <input type="radio" name="g_s_sc" id="s5" value="5" onchange="updateSummary()"><label for="s5">5</label>
+                </div>
+              </div>
+              <div class="star-row">
+                <span class="s-tag tag-t">T</span>
+                <span class="s-name">Task</span>
+                <div class="score-btns">
+                  <input type="radio" name="g_t_sc" id="t1" value="1" onchange="updateSummary()"><label for="t1">1</label>
+                  <input type="radio" name="g_t_sc" id="t2" value="2" onchange="updateSummary()"><label for="t2">2</label>
+                  <input type="radio" name="g_t_sc" id="t3" value="3" onchange="updateSummary()"><label for="t3">3</label>
+                  <input type="radio" name="g_t_sc" id="t4" value="4" onchange="updateSummary()"><label for="t4">4</label>
+                  <input type="radio" name="g_t_sc" id="t5" value="5" onchange="updateSummary()"><label for="t5">5</label>
+                </div>
+              </div>
+              <div class="star-row">
+                <span class="s-tag tag-a">A</span>
+                <span class="s-name">Action</span>
+                <div class="score-btns">
+                  <input type="radio" name="g_a_sc" id="a1" value="1" onchange="updateSummary()"><label for="a1">1</label>
+                  <input type="radio" name="g_a_sc" id="a2" value="2" onchange="updateSummary()"><label for="a2">2</label>
+                  <input type="radio" name="g_a_sc" id="a3" value="3" onchange="updateSummary()"><label for="a3">3</label>
+                  <input type="radio" name="g_a_sc" id="a4" value="4" onchange="updateSummary()"><label for="a4">4</label>
+                  <input type="radio" name="g_a_sc" id="a5" value="5" onchange="updateSummary()"><label for="a5">5</label>
+                </div>
+              </div>
+              <div class="star-row">
+                <span class="s-tag tag-r">R</span>
+                <span class="s-name">Result</span>
+                <div class="score-btns">
+                  <input type="radio" name="g_r_sc" id="r1" value="1" onchange="updateSummary()"><label for="r1">1</label>
+                  <input type="radio" name="g_r_sc" id="r2" value="2" onchange="updateSummary()"><label for="r2">2</label>
+                  <input type="radio" name="g_r_sc" id="r3" value="3" onchange="updateSummary()"><label for="r3">3</label>
+                  <input type="radio" name="g_r_sc" id="r4" value="4" onchange="updateSummary()"><label for="r4">4</label>
+                  <input type="radio" name="g_r_sc" id="r5" value="5" onchange="updateSummary()"><label for="r5">5</label>
+                </div>
+              </div>
+            </div>
+            <div class="g-sec">
+              <div class="g-sec-title">Score Reference</div>
+              <div class="srm-tabs">
+                <button class="srm-tab srm-tab-s active" id="srm-btn-s" onclick="showMiniRubric('s')"><span class="srm-tab-dot"></span>Situation</button>
+                <button class="srm-tab srm-tab-t" id="srm-btn-t" onclick="showMiniRubric('t')"><span class="srm-tab-dot"></span>Task</button>
+                <button class="srm-tab srm-tab-a" id="srm-btn-a" onclick="showMiniRubric('a')"><span class="srm-tab-dot"></span>Action</button>
+                <button class="srm-tab srm-tab-r" id="srm-btn-r" onclick="showMiniRubric('r')"><span class="srm-tab-dot"></span>Result</button>
+              </div>
+              <div class="srm-panel active" id="srmp-s"><div class="srm-card">
+                <div class="srm-row" data-score="5"><div class="srm-num srm-num-5">5</div><div class="srm-body"><div class="srm-level">Complete</div><div class="srm-desc">Setting + project + complication + exact timeline/deadline (all 4 elements)</div></div></div>
+                <div class="srm-row" data-score="4"><div class="srm-num srm-num-4">4</div><div class="srm-body"><div class="srm-level">Substantial</div><div class="srm-desc">Setting + project + specific complication faced (3 elements)</div></div></div>
+                <div class="srm-row" data-score="3"><div class="srm-num srm-num-3">3</div><div class="srm-body"><div class="srm-level">Partial</div><div class="srm-desc">Setting/role + project only — "At my internship, we were building a presentation…"</div></div></div>
+                <div class="srm-row" data-score="2"><div class="srm-num srm-num-2">2</div><div class="srm-body"><div class="srm-level">Minimal</div><div class="srm-desc">One element only, usually just the setting or role (e.g. "At my internship…")</div></div></div>
+                <div class="srm-row" data-score="1"><div class="srm-num srm-num-1">1</div><div class="srm-body"><div class="srm-level">Absent</div><div class="srm-desc">Jumps straight to action or relies on generalizations with no context</div></div></div>
+              </div></div>
+              <div class="srm-panel" id="srmp-t"><div class="srm-card">
+                <div class="srm-row" data-score="5"><div class="srm-num srm-num-5">5</div><div class="srm-body"><div class="srm-level">Complete (+ Stakes)</div><div class="srm-desc">Goal + personal "I" responsibility + parameters + explicit stakes ("…because this counted toward my GPA")</div></div></div>
+                <div class="srm-row" data-score="4"><div class="srm-num srm-num-4">4</div><div class="srm-body"><div class="srm-level">Goal + Responsibility + Parameters</div><div class="srm-desc">States the personal goal with specific criteria for success ("finish without sacrificing quality")</div></div></div>
+                <div class="srm-row" data-score="3"><div class="srm-num srm-num-3">3</div><div class="srm-body"><div class="srm-level">Goal + Personal Responsibility</div><div class="srm-desc">Uses "I" to claim ownership of the goal ("My goal was to ensure it was finished")</div></div></div>
+                <div class="srm-row" data-score="2"><div class="srm-num srm-num-2">2</div><div class="srm-body"><div class="srm-level">General Goal Only</div><div class="srm-desc">Goal mentioned but ownership is grouped or implied ("We needed to finish the campaign")</div></div></div>
+                <div class="srm-row" data-score="1"><div class="srm-num srm-num-1">1</div><div class="srm-body"><div class="srm-level">Absent</div><div class="srm-desc">No goal or task mentioned at all</div></div></div>
+              </div></div>
+              <div class="srm-panel" id="srmp-a"><div class="srm-card">
+                <div class="srm-row" data-score="5"><div class="srm-num srm-num-5">5</div><div class="srm-body"><div class="srm-level">Sequential "I" Actions</div><div class="srm-desc">Explicit chronological steps with clear ordering ("First I did X, then Y, then Z…")</div></div></div>
+                <div class="srm-row" data-score="4"><div class="srm-num srm-num-4">4</div><div class="srm-body"><div class="srm-level">Multiple Specific "I" Actions</div><div class="srm-desc">Two or more distinct, specific steps the candidate personally took</div></div></div>
+                <div class="srm-row" data-score="3"><div class="srm-num srm-num-3">3</div><div class="srm-body"><div class="srm-level">Single Broad "I" Action</div><div class="srm-desc">Uses "I" but summarizes effort in one sweeping action ("I reorganized and finished it")</div></div></div>
+                <div class="srm-row" data-score="2"><div class="srm-num srm-num-2">2</div><div class="srm-body"><div class="srm-level">Passive / Team-focused</div><div class="srm-desc">Relies on "We" or passive voice ("We figured it out" / "The deck was finalized")</div></div></div>
+                <div class="srm-row" data-score="1"><div class="srm-num srm-num-1">1</div><div class="srm-body"><div class="srm-level">Absent / Trait-based</div><div class="srm-desc">No concrete actions — relies on traits only ("I just work hard under pressure")</div></div></div>
+              </div></div>
+              <div class="srm-panel" id="srmp-r"><div class="srm-card">
+                <div class="srm-row" data-score="5"><div class="srm-num srm-num-5">5</div><div class="srm-body"><div class="srm-level">Quantified Outcome</div><div class="srm-desc">Outcome + external feedback + explicit numbers/metrics/grades ("submitted 2 days early, scored 95%")</div></div></div>
+                <div class="srm-row" data-score="4"><div class="srm-num srm-num-4">4</div><div class="srm-body"><div class="srm-level">Outcome + Linkage / Feedback</div><div class="srm-desc">Definite outcome AND external validation or key takeaway (nonprofit implemented recommendations)</div></div></div>
+                <div class="srm-row" data-score="3"><div class="srm-num srm-num-3">3</div><div class="srm-body"><div class="srm-level">Definite Outcome</div><div class="srm-desc">Specific, concrete outcome with no metrics or external feedback ("We submitted the presentation")</div></div></div>
+                <div class="srm-row" data-score="2"><div class="srm-num srm-num-2">2</div><div class="srm-body"><div class="srm-level">Vague Outcome</div><div class="srm-desc">Generic statement only ("It went really well" / "We finished")</div></div></div>
+                <div class="srm-row" data-score="1"><div class="srm-num srm-num-1">1</div><div class="srm-body"><div class="srm-level">Absent</div><div class="srm-desc">No outcome provided — story just ends with no resolution stated</div></div></div>
+              </div></div>
+            </div>
+          </div>
+
+          <!-- Step 3: BARS -->
+          <div class="g-step-panel" id="gsp-3">
+            <div class="g-step-title">Step 3 of 4 — BARS Rating</div>
+            <div class="bars-prompt" id="barsPrompt">"Tell me about a time when you had to meet a challenging deadline. What did you do?"</div>
+            <div class="bars-row" style="margin-bottom:14px;">
+              <div class="bars-btn"><input type="radio" name="g_bars" id="b1" value="1" onchange="updateSummary()"><label for="b1"><span class="bars-num">1</span><span class="bars-lbl">Poor</span></label></div>
+              <div class="bars-btn"><input type="radio" name="g_bars" id="b2" value="2" onchange="updateSummary()"><label for="b2"><span class="bars-num">2</span><span class="bars-lbl">Marginal</span></label></div>
+              <div class="bars-btn"><input type="radio" name="g_bars" id="b3" value="3" onchange="updateSummary()"><label for="b3"><span class="bars-num">3</span><span class="bars-lbl">Average</span></label></div>
+              <div class="bars-btn"><input type="radio" name="g_bars" id="b4" value="4" onchange="updateSummary()"><label for="b4"><span class="bars-num">4</span><span class="bars-lbl">Good</span></label></div>
+              <div class="bars-btn"><input type="radio" name="g_bars" id="b5" value="5" onchange="updateSummary()"><label for="b5"><span class="bars-num">5</span><span class="bars-lbl">Excellent</span></label></div>
+            </div>
+            <div class="g-sec-title">Anchor Reference <span style="margin-left:auto;font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;cursor:pointer;color:#2563eb;" onclick="openInstructions('bars')">Full anchors ↗</span></div>
+            <div class="bars-ref" id="barsRef">
+              <div class="bars-ref-row"><span class="brs" style="color:#059669">5 – Excellent</span><span class="brd">Strategic planning, resource negotiation, quantifiable outcome</span></div>
+              <div class="bars-ref-row"><span class="brs" style="color:#3b82f6">4 – Good</span><span class="brd">Some organization but lacks high-level strategic negotiation</span></div>
+              <div class="bars-ref-row"><span class="brs" style="color:#d97706">3 – Average</span><span class="brd">Brute-force effort / longer hours; met deadline but no systemic planning</span></div>
+              <div class="bars-ref-row"><span class="brs" style="color:#f97316">2 – Marginal</span><span class="brd">Struggled significantly, barely managed to finish</span></div>
+              <div class="bars-ref-row"><span class="brs" style="color:#ef4444">1 – Poor</span><span class="brd">Poor planning, panic, or missed the deadline entirely</span></div>
+            </div>
+          </div>
+
+          <!-- Step 4: Present? -->
+          <div class="g-step-panel" id="gsp-4">
+            <div class="g-step-title">Step 4 of 4 — STAR Present?</div>
+            <div class="g-step-instr">Was each STAR component present in the participant's response?</div>
+            <div class="star-row">
+              <span class="s-tag tag-s">S</span>
+              <span class="s-name">Situation</span>
+              <div class="yn" style="margin-left:auto;">
+                <input type="radio" name="g_s_yn" id="s_yes" value="yes" onchange="updateSummary()">
+                <label for="s_yes">Yes</label>
+                <input type="radio" name="g_s_yn" id="s_no" value="no" onchange="updateSummary()">
+                <label for="s_no">No</label>
+              </div>
+            </div>
+            <div class="star-row">
+              <span class="s-tag tag-t">T</span>
+              <span class="s-name">Task</span>
+              <div class="yn" style="margin-left:auto;">
+                <input type="radio" name="g_t_yn" id="t_yes" value="yes" onchange="updateSummary()">
+                <label for="t_yes">Yes</label>
+                <input type="radio" name="g_t_yn" id="t_no" value="no" onchange="updateSummary()">
+                <label for="t_no">No</label>
+              </div>
+            </div>
+            <div class="star-row">
+              <span class="s-tag tag-a">A</span>
+              <span class="s-name">Action</span>
+              <div class="yn" style="margin-left:auto;">
+                <input type="radio" name="g_a_yn" id="a_yes" value="yes" onchange="updateSummary()">
+                <label for="a_yes">Yes</label>
+                <input type="radio" name="g_a_yn" id="a_no" value="no" onchange="updateSummary()">
+                <label for="a_no">No</label>
+              </div>
+            </div>
+            <div class="star-row">
+              <span class="s-tag tag-r">R</span>
+              <span class="s-name">Result</span>
+              <div class="yn" style="margin-left:auto;">
+                <input type="radio" name="g_r_yn" id="r_yes" value="yes" onchange="updateSummary()">
+                <label for="r_yes">Yes</label>
+                <input type="radio" name="g_r_yn" id="r_no" value="no" onchange="updateSummary()">
+                <label for="r_no">No</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Done: Summary -->
+          <div class="g-step-panel" id="gsp-done">
+            <div class="g-step-title">Complete — Score Summary</div>
+            <div class="summary-box">
+              <div class="sum-row">
+                <span><span class="s-tag tag-s" style="display:inline-flex;width:16px;height:16px;font-size:9px;border-radius:3px;margin-right:5px;vertical-align:middle">S</span>Situation</span>
+                <span class="sum-val" id="sum_s">— / —</span>
+              </div>
+              <div class="sum-row">
+                <span><span class="s-tag tag-t" style="display:inline-flex;width:16px;height:16px;font-size:9px;border-radius:3px;margin-right:5px;vertical-align:middle">T</span>Task</span>
+                <span class="sum-val" id="sum_t">— / —</span>
+              </div>
+              <div class="sum-row">
+                <span><span class="s-tag tag-a" style="display:inline-flex;width:16px;height:16px;font-size:9px;border-radius:3px;margin-right:5px;vertical-align:middle">A</span>Action</span>
+                <span class="sum-val" id="sum_a">— / —</span>
+              </div>
+              <div class="sum-row">
+                <span><span class="s-tag tag-r" style="display:inline-flex;width:16px;height:16px;font-size:9px;border-radius:3px;margin-right:5px;vertical-align:middle">R</span>Result</span>
+                <span class="sum-val" id="sum_r">— / —</span>
+              </div>
+              <div class="sum-row" style="font-weight:600;color:#374151">
+                <span>Structure total</span>
+                <span class="sum-val" id="sum_struct">— / 4</span>
+              </div>
+              <div class="sum-bars">
+                <span>BARS</span>
+                <span id="sum_bars">— / 5</span>
+              </div>
+            </div>
+            <div style="margin-top:14px;font-size:11.5px;color:#065f46;line-height:1.6;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;">
+              This question is complete. Switch to the other question tab to continue grading.
+            </div>
+          </div>
+
+        </div>
+
+        <div class="g-step-foot">
+          <button class="g-next-btn" id="gNextBtn" onclick="gradingNext()">Next →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ Welcome screen ══ -->
+<div class="screen active" id="welcomeScreen">
+  <button onclick="skipToGrading()" style="position:fixed;top:14px;left:14px;height:28px;padding:0 12px;background:#1f2937;border:1px solid #374151;border-radius:6px;color:#9ca3af;font-size:11px;font-weight:500;cursor:pointer;z-index:9999;">Skip (dev)</button>
+  <div class="wc-inner">
+    <div class="screen-logo">Interview <em>Annotation</em> Tool &nbsp;·&nbsp; Prolific Study</div>
+    <div class="wc-card">
+      <div class="wc-head">
+        <h2>Welcome, Grader</h2>
+        <p>Thank you for participating. You will read interview transcripts and annotate them using the STAR framework, then provide behaviorally anchored ratings.</p>
+      </div>
+      <div class="wc-body">
+        <div class="wc-features">
+          <div class="wc-feature"><div class="wc-num">1</div>Complete a short personality survey</div>
+          <div class="wc-feature"><div class="wc-num">2</div>Walk through an interactive annotation tutorial</div>
+          <div class="wc-feature"><div class="wc-num">3</div>Grade each participant's interview transcript</div>
+          <div class="wc-feature"><div class="wc-num">4</div>Export your results when finished</div>
+        </div>
+        <button class="wc-begin" onclick="beginFlow()">Begin &nbsp;→</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Survey screen ══ -->
+<div class="screen" id="surveyScreen">
+  <div class="sv-inner">
+    <div class="screen-logo">Interview <em>Annotation</em> Tool &nbsp;·&nbsp; Prolific Study</div>
+    <div class="sv-card">
+      <div class="sv-title">Personality Survey</div>
+      <div class="sv-sub">Please answer the following questions honestly. There are no right or wrong answers. Your responses are confidential.</div>
+
+      <div class="sv-q">
+        <span class="sv-q-label">1. I see myself as someone who is talkative.</span>
+        <div class="sv-opts" id="sv-q1">
+          <div class="sv-opt" onclick="svSelect('sv-q1',this,'1')"><div class="sv-dot"></div>Strongly Disagree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q1',this,'2')"><div class="sv-dot"></div>Disagree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q1',this,'3')"><div class="sv-dot"></div>Neutral</div>
+          <div class="sv-opt" onclick="svSelect('sv-q1',this,'4')"><div class="sv-dot"></div>Agree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q1',this,'5')"><div class="sv-dot"></div>Strongly Agree</div>
+        </div>
+      </div>
+
+      <div class="sv-q">
+        <span class="sv-q-label">2. I see myself as someone who tends to find fault in others.</span>
+        <div class="sv-opts" id="sv-q2">
+          <div class="sv-opt" onclick="svSelect('sv-q2',this,'1')"><div class="sv-dot"></div>Strongly Disagree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q2',this,'2')"><div class="sv-dot"></div>Disagree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q2',this,'3')"><div class="sv-dot"></div>Neutral</div>
+          <div class="sv-opt" onclick="svSelect('sv-q2',this,'4')"><div class="sv-dot"></div>Agree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q2',this,'5')"><div class="sv-dot"></div>Strongly Agree</div>
+        </div>
+      </div>
+
+      <div class="sv-q">
+        <span class="sv-q-label">3. I see myself as someone who does a thorough job.</span>
+        <div class="sv-opts" id="sv-q3">
+          <div class="sv-opt" onclick="svSelect('sv-q3',this,'1')"><div class="sv-dot"></div>Strongly Disagree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q3',this,'2')"><div class="sv-dot"></div>Disagree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q3',this,'3')"><div class="sv-dot"></div>Neutral</div>
+          <div class="sv-opt" onclick="svSelect('sv-q3',this,'4')"><div class="sv-dot"></div>Agree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q3',this,'5')"><div class="sv-dot"></div>Strongly Agree</div>
+        </div>
+      </div>
+
+      <div class="sv-q">
+        <span class="sv-q-label">4. I see myself as someone who is depressed, blue.</span>
+        <div class="sv-opts" id="sv-q4">
+          <div class="sv-opt" onclick="svSelect('sv-q4',this,'1')"><div class="sv-dot"></div>Strongly Disagree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q4',this,'2')"><div class="sv-dot"></div>Disagree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q4',this,'3')"><div class="sv-dot"></div>Neutral</div>
+          <div class="sv-opt" onclick="svSelect('sv-q4',this,'4')"><div class="sv-dot"></div>Agree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q4',this,'5')"><div class="sv-dot"></div>Strongly Agree</div>
+        </div>
+      </div>
+
+      <div class="sv-q">
+        <span class="sv-q-label">5. I see myself as someone who is original, comes up with new ideas.</span>
+        <div class="sv-opts" id="sv-q5">
+          <div class="sv-opt" onclick="svSelect('sv-q5',this,'1')"><div class="sv-dot"></div>Strongly Disagree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q5',this,'2')"><div class="sv-dot"></div>Disagree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q5',this,'3')"><div class="sv-dot"></div>Neutral</div>
+          <div class="sv-opt" onclick="svSelect('sv-q5',this,'4')"><div class="sv-dot"></div>Agree</div>
+          <div class="sv-opt" onclick="svSelect('sv-q5',this,'5')"><div class="sv-dot"></div>Strongly Agree</div>
+        </div>
+      </div>
+
+      <button class="sv-next" id="svNextBtn" onclick="surveyNext()">Continue to Tutorial &nbsp;→</button>
+      <div class="sv-note">All responses are confidential and used only for research purposes.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Tutorial screen ══ -->
+<div class="screen" id="tutorialScreen">
+  <button onclick="skipToGrading()" style="position:fixed;top:14px;left:14px;height:28px;padding:0 12px;background:#1f2937;border:1px solid #374151;border-radius:6px;color:#9ca3af;font-size:11px;font-weight:500;cursor:pointer;z-index:9999;">Skip (dev)</button>
+  <div class="tut-inner">
+    <div class="screen-logo">Interview <em>Annotation</em> Tool &nbsp;·&nbsp; Prolific Study</div>
+    <div class="tut-card">
+      <div class="tut-head">
+        <div class="tut-head-left">
+          <h3 id="tutTitle">The STAR Framework</h3>
+          <p id="tutSubtitle">What you'll be grading</p>
+        </div>
+        <div class="tut-dots">
+          <div class="tut-dot active" id="tut-dot-1"></div>
+          <div class="tut-dot" id="tut-dot-2"></div>
+          <div class="tut-dot" id="tut-dot-3"></div>
+          <div class="tut-dot" id="tut-dot-4"></div>
+        </div>
+      </div>
+      <div class="tut-body">
+
+        <!-- Step 1: STAR framework with time percentages -->
+        <div class="tut-step active" id="tut-step-1">
+          <div class="tut-step-intro" style="margin-bottom:16px;">
+            Strong behavioral interview answers follow the <strong>STAR</strong> framework — <strong>Situation, Task, Action, Result</strong>. As a grader, your job is to identify which parts of the candidate's response correspond to each component, and how much time they spend on each.
+          </div>
+          <div class="tut-star-grid">
+            <div class="tut-star-card" style="border-left-color:var(--s-color)">
+              <div class="tut-star-head"><span style="width:20px;height:20px;background:var(--s-color);border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:800;flex-shrink:0">S</span><span class="tut-star-name">Situation</span><span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--s-color);background:rgba(99,102,241,0.1);padding:2px 7px;border-radius:10px;">~20%</span></div>
+              <div class="tut-star-def">The context or background — where and when the story took place. Look for setting, timeframe, and relevant background detail.</div>
+              <div class="tut-star-eg">e.g. "During my internship last summer, our team was working on a consulting project…"</div>
+            </div>
+            <div class="tut-star-card" style="border-left-color:var(--t-color)">
+              <div class="tut-star-head"><span style="width:20px;height:20px;background:var(--t-color);border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:800;flex-shrink:0">T</span><span class="tut-star-name">Task</span><span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--t-color);background:rgba(245,158,11,0.1);padding:2px 7px;border-radius:10px;">~10%</span></div>
+              <div class="tut-star-def">The specific goal or responsibility the candidate held. Look for what they were personally accountable for.</div>
+              <div class="tut-star-eg">e.g. "I was responsible for coordinating the final deliverable across three offices."</div>
+            </div>
+            <div class="tut-star-card" style="border-left-color:var(--a-color)">
+              <div class="tut-star-head"><span style="width:20px;height:20px;background:var(--a-color);border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:800;flex-shrink:0">A</span><span class="tut-star-name">Action</span><span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--a-color);background:rgba(16,185,129,0.1);padding:2px 7px;border-radius:10px;">~60%</span></div>
+              <div class="tut-star-def">The specific steps the candidate took — their choices, behaviors, and decisions. This should be the bulk of the answer.</div>
+              <div class="tut-star-eg">e.g. "I set up daily check-ins, created a shared timeline, and proactively flagged blockers."</div>
+            </div>
+            <div class="tut-star-card" style="border-left-color:var(--r-color)">
+              <div class="tut-star-head"><span style="width:20px;height:20px;background:var(--r-color);border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:800;flex-shrink:0">R</span><span class="tut-star-name">Result</span><span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--r-color);background:rgba(239,68,68,0.1);padding:2px 7px;border-radius:10px;">~10%</span></div>
+              <div class="tut-star-def">The outcome — what happened as a direct result of the candidate's actions. Look for measurable or concrete outcomes.</div>
+              <div class="tut-star-eg">e.g. "We submitted on time and the client extended the engagement."</div>
+            </div>
+          </div>
+          <div style="margin-top:16px;font-size:12px;color:var(--muted);line-height:1.65;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);">
+            The percentages above reflect ideal time allocation. Action (~60%) should dominate — it's the most telling part of any behavioral answer.
+          </div>
+        </div>
+
+        <!-- Step 2: Example STAR response -->
+        <div class="tut-step" id="tut-step-2">
+          <div class="tut-step-intro" style="margin-bottom:14px;">
+            Below is an example of a strong STAR response to the question: <strong>"Tell me about a time you had to meet a challenging deadline."</strong> Notice how each part maps to a STAR component.
+          </div>
+          <div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:16px 18px;font-size:13px;line-height:1.8;">
+            <span style="background:rgba(99,102,241,0.15);border-radius:4px;padding:1px 4px;"><strong style="color:var(--s-color)">[S]</strong> During an internship I did this past summer,</span> we had a project where <span style="background:rgba(245,158,11,0.15);border-radius:4px;padding:1px 4px;"><strong style="color:var(--t-color)">[T]</strong> the deadline was in about a couple of weeks</span> and we had to coordinate between teams — <span style="background:rgba(99,102,241,0.15);border-radius:4px;padding:1px 4px;"><strong style="color:var(--s-color)">[S]</strong> not just the Chicago office, but also Dallas and New York.</span> <span style="background:rgba(245,158,11,0.15);border-radius:4px;padding:1px 4px;"><strong style="color:var(--t-color)">[T]</strong> The project was essentially putting together a consulting presentation to help a nonprofit improve their revenue for the upcoming year.</span> And <span style="background:rgba(16,185,129,0.15);border-radius:4px;padding:1px 4px;"><strong style="color:var(--a-color)">[A]</strong> what I did to meet the deadline was make sure to touch base with the team every day,</span> whether over a meeting or through our Teams chat, and <span style="background:rgba(16,185,129,0.15);border-radius:4px;padding:1px 4px;"><strong style="color:var(--a-color)">[A]</strong> made sure that every single person knew what they were going to work on that day.</span> <span style="background:rgba(16,185,129,0.15);border-radius:4px;padding:1px 4px;"><strong style="color:var(--a-color)">[A]</strong> I would also check in throughout each day to make sure we were on schedule and figure out where people needed help or could assist others.</span> And yeah, <span style="background:rgba(239,68,68,0.15);border-radius:4px;padding:1px 4px;"><strong style="color:var(--r-color)">[R]</strong> ultimately that led to us being able to meet our deadline,</span> and with some extra time, <span style="background:rgba(239,68,68,0.15);border-radius:4px;padding:1px 4px;"><strong style="color:var(--r-color)">[R]</strong> we were able to go above and beyond and seek feedback before even presenting to the project manager.</span>
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6;padding:10px 14px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);">
+            Notice that Action makes up the majority of the response — multiple sentences describing specific steps the candidate personally took.
+          </div>
+        </div>
+
+        <!-- Step 3: STAR Tips for Graders -->
+        <div class="tut-step" id="tut-step-3">
+          <div class="tut-step-title">Tips for Grading STAR Responses</div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px;">
+            <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;">
+              <span style="font-size:18px;flex-shrink:0;">🎯</span>
+              <div><strong style="font-size:13px;">Focus on what the candidate personally did</strong><br><span style="font-size:12px;color:var(--muted);line-height:1.6;">Action should dominate. If a candidate mostly describes the situation or outcome with little detail on their own steps, that's a weak response.</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;">
+              <span style="font-size:18px;flex-shrink:0;">🔍</span>
+              <div><strong style="font-size:13px;">Look for specificity, not just structure</strong><br><span style="font-size:12px;color:var(--muted);line-height:1.6;">Good answers name specific tools, decisions, or outcomes — not vague claims like "I helped the team" or "things went well."</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;">
+              <span style="font-size:18px;flex-shrink:0;">⚖️</span>
+              <div><strong style="font-size:13px;">A phrase can span multiple components</strong><br><span style="font-size:12px;color:var(--muted);line-height:1.6;">Sometimes a sentence contains both Situation and Task, or blends Action and Result. Highlight the most dominant component the text is communicating.</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;">
+              <span style="font-size:18px;flex-shrink:0;">📊</span>
+              <div><strong style="font-size:13px;">Use the time balance as a quality signal</strong><br><span style="font-size:12px;color:var(--muted);line-height:1.6;">Responses that are mostly Situation/Task with little Action typically score lower. Responses with rich, specific Action content score higher.</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;">
+              <span style="font-size:18px;flex-shrink:0;">✅</span>
+              <div><strong style="font-size:13px;">Not every response will have all four components</strong><br><span style="font-size:12px;color:var(--muted);line-height:1.6;">Some candidates skip or combine components. Only highlight what is clearly present — don't force a label onto ambiguous text.</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Quiz -->
+        <div class="tut-step" id="tut-step-4">
+          <div class="tut-step-title">Quick Knowledge Check</div>
+          <div class="quiz-intro">Answer the question correctly to continue. You can retry if you get it wrong.</div>
+          <div id="quizContainer"></div>
+        </div>
+
+      </div>
+      <div class="tut-foot">
+        <button class="tut-back-btn" id="tutBackBtn" onclick="tutBack()" disabled>← Back</button>
+        <span class="tut-counter" id="tutCounter">Step 1 of 4</span>
+        <button class="tut-next-btn" id="tutNextBtn" onclick="tutNext()">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Participant list screen ══ -->
+<div class="screen" id="participantListScreen">
+  <div class="plist-inner">
+    <div class="plist-hdr">
+      <div class="plist-hdr-left">
+        <h2>Participants</h2>
+        <p>Select a participant to begin or continue grading their transcripts.</p>
+      </div>
+      <button class="plist-add-btn" onclick="addParticipantFromList()">+ Add Participant</button>
+    </div>
+    <div class="plist-grid" id="plistGrid">
+      <!-- Populated by renderParticipantList() -->
+    </div>
+  </div>
+</div>
+
+<!-- ══ Onboarding modal ══ -->
+<div id="onboardingModal">
+  <div class="ob-modal">
+    <div class="ob-head">
+      <div class="ob-head-left">
+        <h2 id="ob-title">Grading Instructions</h2>
+        <p id="ob-subtitle">Step 1 of 4 — STAR Annotation</p>
+      </div>
+      <div class="ob-head-right">
+        <div class="ob-stepper">
+          <div class="ob-dot active" id="ob-dot-1"></div>
+          <div class="ob-dot" id="ob-dot-2"></div>
+          <div class="ob-dot" id="ob-dot-3"></div>
+          <div class="ob-dot" id="ob-dot-4"></div>
+        </div>
+        <span class="ob-pid-badge" id="obPidBadge">—</span>
+      </div>
+    </div>
+
+    <!-- ── Step 1: STAR Annotation ── -->
+    <div class="ob-body ob-step active" id="ob-step-1">
+      <div class="ob-instr">
+        For each transcript, <strong>highlight and label</strong> the text spans that correspond to the four STAR frames below. A single sentence may span multiple frames; a single frame may stretch across multiple sentences.
+        <br><br>
+        <strong>How to annotate:</strong> Click and drag to select text → choose a frame label (S / T / A / R) from the popup. Click an existing highlight to edit or remove it.
+      </div>
+
+      <div class="ob-section">
+        <div class="ob-section-title">The Four Frames</div>
+        <div class="frame-defs">
+          <div class="frame-def" style="border-left-color:var(--s-color);background:var(--s-bg)">
+            <div class="frame-def-head">
+              <span class="s-tag tag-s" style="width:22px;height:22px;font-size:11px;border-radius:5px">S</span>
+              <span class="frame-def-name" style="color:var(--s-color)">Situation</span>
+            </div>
+            <div class="frame-def-body">The context, background, or setting of the story.</div>
+            <div class="frame-def-look">Look for: time, place, role, or general environment — <em>"During an internship I did this past summer…"</em>, <em>"my sophomore fall, I took on a few different responsibilities"</em></div>
+          </div>
+          <div class="frame-def" style="border-left-color:var(--t-color);background:var(--t-bg)">
+            <div class="frame-def-head">
+              <span class="s-tag tag-t" style="width:22px;height:22px;font-size:11px;border-radius:5px">T</span>
+              <span class="frame-def-name" style="color:var(--t-color)">Task</span>
+            </div>
+            <div class="frame-def-body">The specific problem, goal, or deadline the student had to meet.</div>
+            <div class="frame-def-look">Look for: what was required or the conflict faced — <em>"we had a project where the deadline was in about a couple weeks"</em>, <em>"the goal here was essentially for me to remain on top of all my commitments"</em></div>
+          </div>
+          <div class="frame-def" style="border-left-color:var(--a-color);background:var(--a-bg)">
+            <div class="frame-def-head">
+              <span class="s-tag tag-a" style="width:22px;height:22px;font-size:11px;border-radius:5px">A</span>
+              <span class="frame-def-name" style="color:var(--a-color)">Action</span>
+            </div>
+            <div class="frame-def-body">The specific, observable steps the student personally took to solve the problem.</div>
+            <div class="frame-def-look">Look for: first-person <strong>"I"</strong> statements describing active steps — <em>"make sure to touch base with the team every day"</em>, <em>"I would also try to check in throughout each day"</em></div>
+          </div>
+          <div class="frame-def" style="border-left-color:var(--r-color);background:var(--r-bg)">
+            <div class="frame-def-head">
+              <span class="s-tag tag-r" style="width:22px;height:22px;font-size:11px;border-radius:5px">R</span>
+              <span class="frame-def-name" style="color:var(--r-color)">Result</span>
+            </div>
+            <div class="frame-def-body">The outcome, impact, or learning that occurred because of the action.</div>
+            <div class="frame-def-look">Look for: finishing, grades, feedback, or reflections — <em>"ultimately that led to us being able to meet our deadline"</em>, <em>"what I took away from that is that planning goes such a long way"</em></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ob-section">
+        <div class="ob-section-title">Correct Annotation Example</div>
+        <div class="ob-example"><span class="hl hl-s">During an internship I did this past summer<span class="hl-badge">S</span></span>, we had a project where <span class="hl hl-t">the deadline was in about a couple weeks<span class="hl-badge">T</span></span> and we had to coordinate between teams and <span class="hl hl-s">not just the Chicago office, but also the Dallas and New York office<span class="hl-badge">S</span></span>. <span class="hl hl-t">The project was essentially putting together a consulting presentation to help a nonprofit meet new goals<span class="hl-badge">T</span></span> and kind of improve their revenue for the upcoming year. And <span class="hl hl-a">what I did to meet the deadline was essentially make sure to touch base with the team every day<span class="hl-badge">A</span></span>, whether over a meeting or just through our teams chat and <span class="hl hl-a">made sure that every single person knew what they were gonna work on that day<span class="hl-badge">A</span></span>. <span class="hl hl-a">I would also try to check in throughout each day and make sure that we were making progress<span class="hl-badge">A</span></span> and sort of on schedule to meet our upcoming deadline. And yeah, <span class="hl hl-r">ultimately that led to us being able to meet our deadline<span class="hl-badge">R</span></span> and with some extra time we had to, <span class="hl hl-r">we were able to kind of, you know, go above and beyond a little bit<span class="hl-badge">R</span></span> as we seek feedback before we were even submitting and presenting to project manager.</div>
+        <div class="ex-list">
+          <div class="ex-item"><span class="ex-tag tag-s">S</span><span>"[During an internship I did this past summer]… [not just the Chicago office, but also the Dallas and New York office]"</span></div>
+          <div class="ex-item"><span class="ex-tag tag-t">T</span><span>"[we had a project where the deadline was in about a couple weeks]… [The project was essentially putting together a consulting presentation to help a nonprofit meet new goals]"</span></div>
+          <div class="ex-item"><span class="ex-tag tag-a">A</span><span>"[what I did to meet the deadline was essentially make sure to touch base with the team every day]… [made sure that every single person knew what they were gonna work on that day]… [I would also try to check in throughout each day]"</span></div>
+          <div class="ex-item"><span class="ex-tag tag-r">R</span><span>"[ultimately that led to us being able to meet our deadline]… [we were able to kind of, you know, go above and beyond a little bit]"</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Step 2: STAR Detail Rubric ── -->
+    <div class="ob-body ob-step" id="ob-step-2">
+      <div class="ob-instr">
+        For each STAR element, score <strong>1–5</strong> based on how fully the participant expressed that element. Scores are <em>cumulative</em> — each level builds on the one below. Mark <strong>Yes/No</strong> for whether the element is present at all, then assign a detail score.
+      </div>
+
+      <div class="ob-section">
+        <div class="ob-rtabs">
+          <button class="ob-rtab rt-s active" id="ob-rtab-s">S — Situation</button>
+          <button class="ob-rtab rt-t" id="ob-rtab-t">T — Task</button>
+          <button class="ob-rtab rt-a" id="ob-rtab-a">A — Action</button>
+          <button class="ob-rtab rt-r" id="ob-rtab-r">R — Result</button>
+        </div>
+
+        <div class="ob-rpanel active" id="ob-rpanel-s">
+          <div class="ob-rrow ob-rrow-5"><div class="ob-rnum ob-rnum-5">5</div><div><div class="ob-rlevel">Complete — 4 elements</div><div class="ob-rdesc">Establishes the setting, the project, the complication, AND the exact timeline/deadline (e.g. "…and the deadline was 2 weeks away")</div></div></div>
+          <div class="ob-rrow ob-rrow-4"><div class="ob-rnum ob-rnum-4">4</div><div><div class="ob-rlevel">Substantial — 3 elements</div><div class="ob-rdesc">Establishes setting, project, and the specific complication they faced (e.g. "…and we were behind schedule due to delayed feedback")</div></div></div>
+          <div class="ob-rrow ob-rrow-3"><div class="ob-rnum ob-rnum-3">3</div><div><div class="ob-rlevel">Partial — 2 elements</div><div class="ob-rdesc">Establishes the setting/role and the project (e.g. "At my internship, we were building a presentation…")</div></div></div>
+          <div class="ob-rrow ob-rrow-2"><div class="ob-rnum ob-rnum-2">2</div><div><div class="ob-rlevel">Minimal — 1 element</div><div class="ob-rdesc">Establishes only one element, usually just the setting or role (e.g. "At my internship…")</div></div></div>
+          <div class="ob-rrow ob-rrow-1"><div class="ob-rnum ob-rnum-1">1</div><div><div class="ob-rlevel">Absent</div><div class="ob-rdesc">Jumps straight to the action or relies on generalizations with no contextual setup</div></div></div>
+        </div>
+
+        <div class="ob-rpanel" id="ob-rpanel-t">
+          <div class="ob-rrow ob-rrow-5"><div class="ob-rnum ob-rnum-5">5</div><div><div class="ob-rlevel">Complete — adds stakes</div><div class="ob-rdesc">Goal + personal responsibility + parameters + explicit stakes (e.g. "…because this grade counted toward my final GPA")</div></div></div>
+          <div class="ob-rrow ob-rrow-4"><div class="ob-rnum ob-rnum-4">4</div><div><div class="ob-rlevel">Goal + Responsibility + Parameters</div><div class="ob-rdesc">States the personal goal and adds specific criteria for success (e.g. "My goal was to finish it without sacrificing quality")</div></div></div>
+          <div class="ob-rrow ob-rrow-3"><div class="ob-rnum ob-rnum-3">3</div><div><div class="ob-rlevel">Goal + Personal Responsibility</div><div class="ob-rdesc">States the goal and uses "I" to claim personal ownership (e.g. "My goal was to ensure the campaign was finished")</div></div></div>
+          <div class="ob-rrow ob-rrow-2"><div class="ob-rnum ob-rnum-2">2</div><div><div class="ob-rlevel">General Goal Only</div><div class="ob-rdesc">A goal is mentioned but ownership is grouped or implied (e.g. "We needed to finish the campaign")</div></div></div>
+          <div class="ob-rrow ob-rrow-1"><div class="ob-rnum ob-rnum-1">1</div><div><div class="ob-rlevel">Absent</div><div class="ob-rdesc">No goal or task mentioned at all</div></div></div>
+        </div>
+
+        <div class="ob-rpanel" id="ob-rpanel-a">
+          <div class="ob-rrow ob-rrow-5"><div class="ob-rnum ob-rnum-5">5</div><div><div class="ob-rlevel">Sequential / Chronological "I" Actions</div><div class="ob-rdesc">Explicitly structures multiple personal actions in a clear sequence (e.g. "First I did X, second I did Y, third I…")</div></div></div>
+          <div class="ob-rrow ob-rrow-4"><div class="ob-rnum ob-rnum-4">4</div><div><div class="ob-rlevel">Multiple Specific "I" Actions</div><div class="ob-rdesc">Breaks the effort into two or more distinct, specific steps the candidate personally took</div></div></div>
+          <div class="ob-rrow ob-rrow-3"><div class="ob-rnum ob-rnum-3">3</div><div><div class="ob-rlevel">Single / Broad "I" Action</div><div class="ob-rdesc">Uses "I" but summarizes effort in one sweeping action rather than tactical steps (e.g. "I reorganized the project and finished it")</div></div></div>
+          <div class="ob-rrow ob-rrow-2"><div class="ob-rnum ob-rnum-2">2</div><div><div class="ob-rlevel">Passive / Team-focused</div><div class="ob-rdesc">Mentions actions but relies on "We" or passive voice (e.g. "We figured it out" / "The deck was finalized")</div></div></div>
+          <div class="ob-rrow ob-rrow-1"><div class="ob-rnum ob-rnum-1">1</div><div><div class="ob-rlevel">Absent / Trait-based</div><div class="ob-rdesc">No concrete actions — relies entirely on general traits (e.g. "I just work hard under pressure")</div></div></div>
+        </div>
+
+        <div class="ob-rpanel" id="ob-rpanel-r">
+          <div class="ob-rrow ob-rrow-5"><div class="ob-rnum ob-rnum-5">5</div><div><div class="ob-rlevel">Quantified Outcome</div><div class="ob-rdesc">Outcome + external feedback + explicit numbers/metrics/grades/time saved (e.g. "submitted two days early, scored 95%")</div></div></div>
+          <div class="ob-rrow ob-rrow-4"><div class="ob-rnum ob-rnum-4">4</div><div><div class="ob-rlevel">Outcome + Linkage / Feedback</div><div class="ob-rdesc">Definite outcome AND external validation or key takeaway (e.g. "We submitted and the nonprofit implemented our recommendations")</div></div></div>
+          <div class="ob-rrow ob-rrow-3"><div class="ob-rnum ob-rnum-3">3</div><div><div class="ob-rlevel">Definite Outcome</div><div class="ob-rdesc">Specific, concrete outcome stated but no metrics or external feedback (e.g. "We submitted the presentation")</div></div></div>
+          <div class="ob-rrow ob-rrow-2"><div class="ob-rnum ob-rnum-2">2</div><div><div class="ob-rlevel">Vague Outcome</div><div class="ob-rdesc">States an outcome but it is highly generic (e.g. "It went really well" / "We finished")</div></div></div>
+          <div class="ob-rrow ob-rrow-1"><div class="ob-rnum ob-rnum-1">1</div><div><div class="ob-rlevel">Absent</div><div class="ob-rdesc">No outcome provided — story just ends with no resolution stated</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Step 3: BARS Behavioral Anchors ── -->
+    <div class="ob-body ob-step" id="ob-step-3">
+      <div class="ob-instr">
+        After annotating, assign a <strong>BARS score (1–5)</strong> that reflects the overall <em>quality</em> of the competency demonstrated — completely independent of STAR structure. <strong>Always read the Score 3 (Average) anchor first</strong>, then decide if the response is above, below, or at that level.
+      </div>
+
+      <div class="ob-section">
+        <div class="ob-section-title">Q1 — Time Management &amp; Working Under Pressure</div>
+        <div class="bars-anchor-prompt">"Tell me about a time when you had to meet a challenging deadline. What did you do?"</div>
+        <div class="anchor-card">
+          <div class="anchor-head">
+            <span class="anchor-score" style="color:#059669">5</span>
+            <span class="anchor-label" style="color:#059669">Excellent</span>
+            <span class="anchor-short">Strategic planning + resource negotiation + quantifiable outcome</span>
+          </div>
+          <div class="anchor-body">
+            <div class="anchor-quote">"I broke the project into daily milestones. I proactively asked my manager to reassign two non-essential tasks, and I used a shared calendar to keep the team updated. We delivered the project two days early."</div>
+            <div class="anchor-note">Participant explicitly describes strategic planning, resource negotiation, and a successful, quantifiable outcome.</div>
+          </div>
+        </div>
+        <div class="anchor-card">
+          <div class="anchor-head">
+            <span class="anchor-score" style="color:#2563eb">4</span>
+            <span class="anchor-label" style="color:#2563eb">Good</span>
+            <span class="anchor-short">Between 3 and 5 — some organization, lacks strategic negotiation</span>
+          </div>
+          <div class="anchor-between">Response falls between 3 and 5. They show some organization but lack high-level strategic negotiation or proactive resource management.</div>
+        </div>
+        <div class="anchor-card">
+          <div class="anchor-head">
+            <span class="anchor-score" style="color:#d97706">3</span>
+            <span class="anchor-label" style="color:#d97706">Average — Read this first</span>
+            <span class="anchor-short">Brute force effort, met deadline but no systemic planning</span>
+          </div>
+          <div class="anchor-body">
+            <div class="anchor-quote">"I just stayed late every night and worked through the weekend until it was done. I drank a lot of coffee and pushed through it. I met the deadline, but I was exhausted."</div>
+            <div class="anchor-note">Participant relies on brute-force effort and longer hours rather than systemic planning or communication.</div>
+          </div>
+        </div>
+        <div class="anchor-card">
+          <div class="anchor-head">
+            <span class="anchor-score" style="color:#ea580c">2</span>
+            <span class="anchor-label" style="color:#ea580c">Marginal</span>
+            <span class="anchor-short">Between 1 and 3 — struggled significantly, barely finished</span>
+          </div>
+          <div class="anchor-between">Response falls between 1 and 3. They struggled significantly but barely managed to finish.</div>
+        </div>
+        <div class="anchor-card">
+          <div class="anchor-head">
+            <span class="anchor-score" style="color:#dc2626">1</span>
+            <span class="anchor-label" style="color:#dc2626">Poor</span>
+            <span class="anchor-short">Poor planning, panic, or missed the deadline</span>
+          </div>
+          <div class="anchor-body">
+            <div class="anchor-quote">"I panicked because there wasn't enough time. I tried to do it all at the last minute, ignored my other work, and ended up missing the deadline."</div>
+            <div class="anchor-note">Participant describes poor planning, panic, or failing to meet the objective entirely.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ob-section">
+        <div class="ob-section-title">Q2 — Prioritization &amp; Organization</div>
+        <div class="bars-anchor-prompt">"Tell me about a time when you had too many things to do and you were required to prioritize your tasks."</div>
+        <div class="anchor-card">
+          <div class="anchor-head">
+            <span class="anchor-score" style="color:#059669">5</span>
+            <span class="anchor-label" style="color:#059669">Excellent</span>
+            <span class="anchor-short">Logical framework + stakeholder communication + delegation</span>
+          </div>
+          <div class="anchor-body">
+            <div class="anchor-quote">"I reviewed all my tasks and categorized them by urgency and importance. I communicated with stakeholders to push back the deadline on lower-priority items, and I delegated one task to a teammate. All critical tasks were completed on time."</div>
+            <div class="anchor-note">Participant describes applying a logical framework, communicating with stakeholders, and successfully managing expectations.</div>
+          </div>
+        </div>
+        <div class="anchor-card">
+          <div class="anchor-head">
+            <span class="anchor-score" style="color:#2563eb">4</span>
+            <span class="anchor-label" style="color:#2563eb">Good</span>
+            <span class="anchor-short">Between 3 and 5 — prioritized well, no stakeholder management</span>
+          </div>
+          <div class="anchor-between">Response falls between 3 and 5. They prioritized well but did not actively manage external stakeholder expectations.</div>
+        </div>
+        <div class="anchor-card">
+          <div class="anchor-head">
+            <span class="anchor-score" style="color:#d97706">3</span>
+            <span class="anchor-label" style="color:#d97706">Average — Read this first</span>
+            <span class="anchor-short">Basic to-do list, arbitrary prioritization</span>
+          </div>
+          <div class="anchor-body">
+            <div class="anchor-quote">"I wrote down a to-do list and just started working on whatever was due first. I worked really fast and managed to get most of the things done by the end of the day."</div>
+            <div class="anchor-note">Participant uses basic, arbitrary prioritization methods without evaluating strategic importance.</div>
+          </div>
+        </div>
+        <div class="anchor-card">
+          <div class="anchor-head">
+            <span class="anchor-score" style="color:#ea580c">2</span>
+            <span class="anchor-label" style="color:#ea580c">Marginal</span>
+            <span class="anchor-short">Between 1 and 3 — attempted to organize, dropped tasks</span>
+          </div>
+          <div class="anchor-between">Response falls between 1 and 3. They attempted to organize but still dropped some important tasks.</div>
+        </div>
+        <div class="anchor-card">
+          <div class="anchor-head">
+            <span class="anchor-score" style="color:#dc2626">1</span>
+            <span class="anchor-label" style="color:#dc2626">Poor</span>
+            <span class="anchor-short">Chaotic multitasking, overwhelmed, dropped responsibilities</span>
+          </div>
+          <div class="anchor-body">
+            <div class="anchor-quote">"I tried to multitask and do a little bit of everything at once. I got completely overwhelmed, shut down, and forgot to submit the most important assignment."</div>
+            <div class="anchor-note">Participant describes a failure to prioritize, chaotic multitasking, and dropped responsibilities.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Step 4: Grading Rules ── -->
+    <div class="ob-body ob-step" id="ob-step-4">
+      <div class="ob-instr">
+        You will evaluate each response using <strong>two separate tools</strong>: the <strong>STAR Structure Checklist</strong> (measures how the answer was formatted) and the <strong>BARS</strong> (measures the quality of the competency demonstrated). Grade them <em>independently</em> — a well-structured STAR response can still score a 1 on BARS.
+      </div>
+
+      <div class="ob-section">
+        <div class="ob-section-title">5 Key Rules</div>
+        <div class="rule-box"><div class="rule-num">1</div><div class="rule-text"><strong>Look for evidence, not eloquence.</strong> Do not penalize for stuttering or filler words, and do not reward smooth delivery. Grade strictly on the presence or absence of the required elements.</div></div>
+        <div class="rule-box"><div class="rule-num">2</div><div class="rule-text"><strong>Track accumulation (STAR scores).</strong> Each level (1–5) builds on the previous one. A participant earns a higher score only by successfully accumulating the required elements defined in the rubric.</div></div>
+        <div class="rule-box"><div class="rule-num">3</div><div class="rule-text"><strong>Set your BARS baseline.</strong> Always read the Score 3 (Average) anchor first before grading. Then decide if the response is above, below, or at that level. Give a 1, 3, or 5 for a clear match; give a 2 or 4 if the response falls strictly between two anchors.</div></div>
+        <div class="rule-box"><div class="rule-num">4</div><div class="rule-text"><strong>Avoid Halo bias.</strong> Grade BARS quality completely independent of structure. A beautifully formatted STAR answer can still demonstrate poor strategy. A rambling response can still show excellent judgment.</div></div>
+        <div class="rule-box"><div class="rule-num">5</div><div class="rule-text"><strong>STAR Checklist is presence-only.</strong> Mark Yes if the component appears at all — even weakly. "I just worked faster" still earns Yes for Action. Reserve the 1–5 detail score for quality.</div></div>
+      </div>
+
+      <div class="ob-section">
+        <div class="ob-section-title">Your Workflow</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px">
+            <span style="font-weight:800;color:#2563eb;font-size:13px;flex-shrink:0">1</span>
+            <span style="font-size:12.5px;color:#374151;line-height:1.5">Read the full transcript once without annotating.</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px">
+            <span style="font-weight:800;color:#2563eb;font-size:13px;flex-shrink:0">2</span>
+            <span style="font-size:12.5px;color:#374151;line-height:1.5">Go back and highlight + label all STAR spans (S, T, A, R).</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px">
+            <span style="font-weight:800;color:#2563eb;font-size:13px;flex-shrink:0">3</span>
+            <span style="font-size:12.5px;color:#374151;line-height:1.5">In the grading panel, mark Yes/No for each element and assign a detail score (1–5).</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px">
+            <span style="font-weight:800;color:#2563eb;font-size:13px;flex-shrink:0">4</span>
+            <span style="font-size:12.5px;color:#374151;line-height:1.5">Read the BARS Score 3 anchor, then assign a BARS score (1–5) for overall quality.</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px">
+            <span style="font-weight:800;color:#2563eb;font-size:13px;flex-shrink:0">5</span>
+            <span style="font-size:12.5px;color:#374151;line-height:1.5">Hit <strong>Save</strong>, then switch to Q2 and repeat the process.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ob-foot">
+      <div class="ob-foot-left">
+        <button class="ob-nav-back" id="ob-back-btn" onclick="obBack()" style="display:none">← Back</button>
+        <span class="ob-step-counter" id="ob-step-counter">Step 1 of 4</span>
+        <button onclick="skipToTour()" style="height:28px;padding:0 10px;background:#1f2937;border:1px solid #374151;border-radius:6px;color:#9ca3af;font-size:11px;font-weight:500;cursor:pointer;margin-left:4px;">Skip (dev)</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="ob-gate-hint" id="ob-gate-hint"></span>
+        <button class="ob-nav-next" id="ob-next-btn" onclick="obNext()" disabled>Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Frame popup -->
+<div class="popup" id="framePopup">
+  <div class="popup-title">Label as</div>
+  <div class="frame-grid">
+    <button class="fbtn fbtn-s" onclick="applyHighlight('s')">S — Situation</button>
+    <button class="fbtn fbtn-t" onclick="applyHighlight('t')">T — Task</button>
+    <button class="fbtn fbtn-a" onclick="applyHighlight('a')">A — Action</button>
+    <button class="fbtn fbtn-r" onclick="applyHighlight('r')">R — Result</button>
+    <button class="fbtn fbtn-remove" id="removeHlBtn" onclick="removeCurrentHighlight()" style="display:none">Remove highlight</button>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<!-- Tour card -->
+<div id="tourCard" style="display:none">
+  <div class="tour-step-badge" id="tourBadge">Tutorial · Step 1</div>
+  <div class="tour-msg" id="tourMsg">—</div>
+  <div class="tour-foot">
+    <button class="tour-skip-btn" onclick="skipTour()">Skip tutorial</button>
+    <span class="tour-progress" id="tourProgress"></span>
+    <button class="tour-action-btn" id="tourActionBtn" style="display:none" onclick="tourActionClick()">Continue →</button>
+  </div>
+</div>
+
+<!-- Confirmation dialog -->
+<div class="cdlg-overlay" id="confirmDlg">
+  <div class="cdlg-box">
+    <div class="cdlg-msg" id="cdlgMsg"></div>
+    <div class="cdlg-actions">
+      <button class="cdlg-cancel" id="cdlgCancel">Go back</button>
+      <button class="cdlg-ok" id="cdlgOk">Yes, continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Instructions Modal -->
+<div class="modal-overlay" id="instructionsModal" onclick="closeInstructionsOutside(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Annotation &amp; Grading Guide</h2>
+      <button class="modal-close" onclick="closeInstructions()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="modal-section">
+        <div class="modal-section-title">Task Overview</div>
+        <p style="font-size:13px;color:#374151;line-height:1.65">
+          For the provided transcript, highlight and label the text spans that correspond to the four STAR frames.
+          A single sentence may contain multiple frames, or a single frame may stretch across multiple sentences.
+          <br><br>
+          <strong>Grading approach:</strong> Look for evidence, not eloquence — do not penalize for filler words
+          or reward smooth delivery. Grade strictly on the presence or absence of required elements.
+          Avoid "Halo" bias: grade BARS quality completely independent of STAR structure.
+        </p>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Frame Definitions</div>
+        <div class="frame-defs">
+          <div class="frame-def" style="border-left-color:var(--s-color)">
+            <div class="frame-def-head">
+              <span class="s-tag tag-s">S</span>
+              <span class="frame-def-name">Situation</span>
+            </div>
+            <div class="frame-def-body">The context, background, or setting of the story.</div>
+            <div class="frame-def-look">Look for: time, place, role, or general environment — "During an internship I did this past summer…", "My sophomore fall, I took on a few different responsibilities…"</div>
+          </div>
+          <div class="frame-def" style="border-left-color:var(--t-color)">
+            <div class="frame-def-head">
+              <span class="s-tag tag-t">T</span>
+              <span class="frame-def-name">Task</span>
+            </div>
+            <div class="frame-def-body">The specific problem, goal, or deadline the student had to meet.</div>
+            <div class="frame-def-look">Look for: what was required of them or the conflict they faced — "we had a project where the deadline was in about a couple weeks", "the goal here was essentially for me to remain on top of all my commitments"</div>
+          </div>
+          <div class="frame-def" style="border-left-color:var(--a-color)">
+            <div class="frame-def-head">
+              <span class="s-tag tag-a">A</span>
+              <span class="frame-def-name">Action</span>
+            </div>
+            <div class="frame-def-body">The specific, observable steps the student took to solve the problem.</div>
+            <div class="frame-def-look">Look for: first-person "I" or "we" statements describing active steps — "make sure to touch base with the team every day", "I would also try to check in throughout each day"</div>
+          </div>
+          <div class="frame-def" style="border-left-color:var(--r-color)">
+            <div class="frame-def-head">
+              <span class="s-tag tag-r">R</span>
+              <span class="frame-def-name">Result</span>
+            </div>
+            <div class="frame-def-body">The outcome, impact, or learning that occurred because of the action.</div>
+            <div class="frame-def-look">Look for: finishing, grades, feedback, or reflections — "ultimately that led to us being able to meet our deadline", "what I took away from that is that planning goes such a long way"</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Example — Correct Annotations</div>
+        <div class="ex-transcript">
+          <span class="hl hl-s">During an internship I did this past summer<span class="hl-badge">S</span></span>, we had a project where <span class="hl hl-t">the deadline was in about a couple weeks<span class="hl-badge">T</span></span> and we had to coordinate between teams and <span class="hl hl-s">not just the Chicago office, but also the Dallas and New York office<span class="hl-badge">S</span></span>. <span class="hl hl-t">The project was essentially putting together a consulting presentation to help a nonprofit meet new goals<span class="hl-badge">T</span></span> and kind of improve their revenue for the upcoming year. And <span class="hl hl-a">what I did to meet the deadline was essentially make sure to touch base with the team every day<span class="hl-badge">A</span></span>, whether over a meeting or just, you know, through our teams chat and <span class="hl hl-a">made sure that every single person knew what they were gonna work on that day<span class="hl-badge">A</span></span>. <span class="hl hl-a">I would also try to check in throughout each day and make sure that we were making progress<span class="hl-badge">A</span></span> and sort of on schedule to meet our upcoming deadline. And yeah, <span class="hl hl-r">ultimately that led to us being able to meet our deadline<span class="hl-badge">R</span></span> and with some extra time we had to, <span class="hl hl-r">we were able to kind of, you know, go above and beyond a little bit<span class="hl-badge">R</span></span> as we seek feedback before we were even, you know, submitting and presenting to project manager.
+        </div>
+        <div class="ex-list">
+          <div class="ex-item"><span class="ex-tag tag-s">S</span><span>"[During an internship I did this past summer]… [not just the Chicago office, but also the Dallas and New York office]"</span></div>
+          <div class="ex-item"><span class="ex-tag tag-t">T</span><span>"[we had a project where the deadline was in about a couple weeks]… [The project was essentially putting together a consulting presentation to help a nonprofit meet new goals]"</span></div>
+          <div class="ex-item"><span class="ex-tag tag-a">A</span><span>"[what I did to meet the deadline was essentially make sure to touch base with the team every day]… [made sure that every single person knew what they were gonna work on that day]… [I would also try to check in throughout each day]"</span></div>
+          <div class="ex-item"><span class="ex-tag tag-r">R</span><span>"[ultimately that led to us being able to meet our deadline]… [we were able to kind of, you know, go above and beyond a little bit]"</span></div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">STAR Detail Rubric (1–5)</div>
+        <div class="rubric-tabs">
+          <button class="rubric-tab rt-s active" onclick="switchRubricTab('s')">S — Situation</button>
+          <button class="rubric-tab rt-t" onclick="switchRubricTab('t')">T — Task</button>
+          <button class="rubric-tab rt-a" onclick="switchRubricTab('a')">A — Action</button>
+          <button class="rubric-tab rt-r" onclick="switchRubricTab('r')">R — Result</button>
+        </div>
+        <div class="rubric-panel active" id="rpanel-s">
+          <div class="rubric-rows">
+            <div class="rubric-row"><div class="rubric-score" style="color:#059669">5</div><div class="rubric-content"><div class="rubric-level">Complete (4 elements)</div><div class="rubric-desc">Establishes the setting, the project, the complication, AND the exact timeline/deadline (e.g. "…and the deadline was 2 weeks away")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#3b82f6">4</div><div class="rubric-content"><div class="rubric-level">Substantial (3 elements)</div><div class="rubric-desc">Establishes the setting, the project, and the specific complication they faced (e.g. "…and we were behind schedule due to delayed feedback")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#d97706">3</div><div class="rubric-content"><div class="rubric-level">Partial (2 elements)</div><div class="rubric-desc">Establishes the setting/role and the project (e.g. "At my internship, we were building a presentation…")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#f97316">2</div><div class="rubric-content"><div class="rubric-level">Minimal (1 element)</div><div class="rubric-desc">Establishes only one element, usually the setting or role (e.g. "At my internship…")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#ef4444">1</div><div class="rubric-content"><div class="rubric-level">Absent (0 elements)</div><div class="rubric-desc">Jumps straight to the action or relies on generalizations with no contextual setup</div></div></div>
+          </div>
+        </div>
+        <div class="rubric-panel" id="rpanel-t">
+          <div class="rubric-rows">
+            <div class="rubric-row"><div class="rubric-score" style="color:#059669">5</div><div class="rubric-content"><div class="rubric-level">Complete (adds stakes)</div><div class="rubric-desc">Goal + personal responsibility + parameters + explicit stakes (e.g. "…because this grade counted toward my final GPA")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#3b82f6">4</div><div class="rubric-content"><div class="rubric-level">Goal + Responsibility + Parameters</div><div class="rubric-desc">States the personal goal and adds specific criteria for success (e.g. "My goal was to finish it without sacrificing quality")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#d97706">3</div><div class="rubric-content"><div class="rubric-level">Goal + Personal Responsibility</div><div class="rubric-desc">States the goal and uses "I" to claim personal responsibility (e.g. "My goal was to ensure the campaign was finished")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#f97316">2</div><div class="rubric-content"><div class="rubric-level">General Goal Only</div><div class="rubric-desc">A goal is mentioned but ownership is grouped or implied (e.g. "We needed to finish the campaign")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#ef4444">1</div><div class="rubric-content"><div class="rubric-level">Absent</div><div class="rubric-desc">No goal or task mentioned at all</div></div></div>
+          </div>
+        </div>
+        <div class="rubric-panel" id="rpanel-a">
+          <div class="rubric-rows">
+            <div class="rubric-row"><div class="rubric-score" style="color:#059669">5</div><div class="rubric-content"><div class="rubric-level">Sequential / Chronological "I" Actions</div><div class="rubric-desc">Explicitly structures multiple personal actions in a clear sequence (e.g. "First I did X, second I did Y, third I…")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#3b82f6">4</div><div class="rubric-content"><div class="rubric-level">Multiple Specific "I" Actions</div><div class="rubric-desc">Breaks the effort into two or more distinct, specific steps the candidate personally took</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#d97706">3</div><div class="rubric-content"><div class="rubric-level">Single / Broad "I" Action</div><div class="rubric-desc">Uses "I" statements but summarizes the effort in one broad, sweeping action rather than detailing tactical steps (e.g. "I reorganized the project and finished it")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#f97316">2</div><div class="rubric-content"><div class="rubric-level">Passive / Team-focused</div><div class="rubric-desc">Mentions actions but relies on "We" statements or passive voice (e.g. "We figured it out" / "The deck was finalized")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#ef4444">1</div><div class="rubric-content"><div class="rubric-level">Absent / Trait-based</div><div class="rubric-desc">No concrete actions described; relies entirely on general traits (e.g. "I just work hard under pressure")</div></div></div>
+          </div>
+        </div>
+        <div class="rubric-panel" id="rpanel-r">
+          <div class="rubric-rows">
+            <div class="rubric-row"><div class="rubric-score" style="color:#059669">5</div><div class="rubric-content"><div class="rubric-level">Quantified Outcome</div><div class="rubric-desc">States the outcome + external feedback + explicit numbers/metrics/grades/time saved (e.g. "submitted two days early, scored 95%")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#3b82f6">4</div><div class="rubric-content"><div class="rubric-level">Outcome + Linkage / Feedback</div><div class="rubric-desc">Definite outcome AND external validation or key takeaway (e.g. "We submitted and the nonprofit implemented our recommendations")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#d97706">3</div><div class="rubric-content"><div class="rubric-level">Definite Outcome</div><div class="rubric-desc">Specific, concrete outcome stated but no metrics or external feedback (e.g. "We submitted the presentation")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#f97316">2</div><div class="rubric-content"><div class="rubric-level">Vague Outcome</div><div class="rubric-desc">States an outcome but it is highly generic (e.g. "It went really well" / "We finished")</div></div></div>
+            <div class="rubric-row"><div class="rubric-score" style="color:#ef4444">1</div><div class="rubric-content"><div class="rubric-level">Absent</div><div class="rubric-desc">No outcome provided; the story just ends with no resolution stated</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-section" id="guide-section-bars">
+        <div class="modal-section-title">BARS Behavioral Anchors</div>
+
+        <div class="bars-q-tabs">
+          <button class="bars-q-tab active" id="bqtab-q1" onclick="switchBarsQTab('q1')">Q1 — Time Management</button>
+          <button class="bars-q-tab" id="bqtab-q2" onclick="switchBarsQTab('q2')">Q2 — Prioritization</button>
+        </div>
+
+        <!-- Q1 -->
+        <div class="bars-q-panel active" id="bqpanel-q1">
+          <div class="bars-competency">Competency: Time Management &amp; Working Under Pressure</div>
+          <div class="bars-anchor-prompt">"Tell me about a time when you had to meet a challenging deadline. What did you do?"</div>
+
+          <div class="anchor-card">
+            <div class="anchor-head">
+              <span class="anchor-score" style="color:#059669">5</span>
+              <span class="anchor-label" style="color:#059669">Excellent</span>
+              <span class="anchor-short">Strategic planning + resource negotiation + quantifiable outcome</span>
+            </div>
+            <div class="anchor-body">
+              <div class="anchor-quote">"I broke the project into daily milestones. I proactively asked my manager to reassign two non-essential tasks, and I used a shared calendar to keep the team updated. We delivered the project two days early."</div>
+              <div class="anchor-note">Participant explicitly describes strategic planning, resource negotiation, and a successful, quantifiable outcome.</div>
+            </div>
+          </div>
+
+          <div class="anchor-card">
+            <div class="anchor-head">
+              <span class="anchor-score" style="color:#2563eb">4</span>
+              <span class="anchor-label" style="color:#2563eb">Good</span>
+              <span class="anchor-short">Between 3 and 5 — some organization, lacks strategic negotiation</span>
+            </div>
+            <div class="anchor-between">Response falls between 3 and 5. They show some organization but lack high-level strategic negotiation or proactive resource management.</div>
+          </div>
+
+          <div class="anchor-card">
+            <div class="anchor-head">
+              <span class="anchor-score" style="color:#d97706">3</span>
+              <span class="anchor-label" style="color:#d97706">Average</span>
+              <span class="anchor-short">Brute force effort, met deadline but no systemic planning</span>
+            </div>
+            <div class="anchor-body">
+              <div class="anchor-quote">"I just stayed late every night and worked through the weekend until it was done. I drank a lot of coffee and pushed through it. I met the deadline, but I was exhausted."</div>
+              <div class="anchor-note">Participant relies on brute-force effort and longer hours rather than systemic planning or communication.</div>
+            </div>
+          </div>
+
+          <div class="anchor-card">
+            <div class="anchor-head">
+              <span class="anchor-score" style="color:#ea580c">2</span>
+              <span class="anchor-label" style="color:#ea580c">Marginal</span>
+              <span class="anchor-short">Between 1 and 3 — struggled significantly, barely finished</span>
+            </div>
+            <div class="anchor-between">Response falls between 1 and 3. They struggled significantly but barely managed to finish.</div>
+          </div>
+
+          <div class="anchor-card">
+            <div class="anchor-head">
+              <span class="anchor-score" style="color:#dc2626">1</span>
+              <span class="anchor-label" style="color:#dc2626">Poor</span>
+              <span class="anchor-short">Poor planning, panic, or missed the deadline</span>
+            </div>
+            <div class="anchor-body">
+              <div class="anchor-quote">"I panicked because there wasn't enough time. I tried to do it all at the last minute, ignored my other work, and ended up missing the deadline."</div>
+              <div class="anchor-note">Participant describes poor planning, panic, or failing to meet the objective entirely.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="bars-q-panel" id="bqpanel-q2">
+          <div class="bars-competency">Competency: Prioritization &amp; Organization</div>
+          <div class="bars-anchor-prompt">"Tell me about a time when you had too many things to do and you were required to prioritize your tasks."</div>
+
+          <div class="anchor-card">
+            <div class="anchor-head">
+              <span class="anchor-score" style="color:#059669">5</span>
+              <span class="anchor-label" style="color:#059669">Excellent</span>
+              <span class="anchor-short">Logical framework + stakeholder communication + delegation</span>
+            </div>
+            <div class="anchor-body">
+              <div class="anchor-quote">"I reviewed all my tasks and categorized them by urgency and importance. I communicated with stakeholders to push back the deadline on lower-priority items, and I delegated one task to a teammate. All critical tasks were completed on time."</div>
+              <div class="anchor-note">Participant describes applying a logical framework, communicating with stakeholders, and successfully managing expectations.</div>
+            </div>
+          </div>
+
+          <div class="anchor-card">
+            <div class="anchor-head">
+              <span class="anchor-score" style="color:#2563eb">4</span>
+              <span class="anchor-label" style="color:#2563eb">Good</span>
+              <span class="anchor-short">Between 3 and 5 — prioritized well, no stakeholder management</span>
+            </div>
+            <div class="anchor-between">Response falls between 3 and 5. They prioritized well but did not actively manage external stakeholder expectations.</div>
+          </div>
+
+          <div class="anchor-card">
+            <div class="anchor-head">
+              <span class="anchor-score" style="color:#d97706">3</span>
+              <span class="anchor-label" style="color:#d97706">Average</span>
+              <span class="anchor-short">Basic to-do list, arbitrary prioritization</span>
+            </div>
+            <div class="anchor-body">
+              <div class="anchor-quote">"I wrote down a to-do list and just started working on whatever was due first. I worked really fast and managed to get most of the things done by the end of the day."</div>
+              <div class="anchor-note">Participant uses basic, arbitrary prioritization methods without evaluating strategic importance.</div>
+            </div>
+          </div>
+
+          <div class="anchor-card">
+            <div class="anchor-head">
+              <span class="anchor-score" style="color:#ea580c">2</span>
+              <span class="anchor-label" style="color:#ea580c">Marginal</span>
+              <span class="anchor-short">Between 1 and 3 — attempted to organize, dropped tasks</span>
+            </div>
+            <div class="anchor-between">Response falls between 1 and 3. They attempted to organize but still dropped some important tasks.</div>
+          </div>
+
+          <div class="anchor-card">
+            <div class="anchor-head">
+              <span class="anchor-score" style="color:#dc2626">1</span>
+              <span class="anchor-label" style="color:#dc2626">Poor</span>
+              <span class="anchor-short">Chaotic multitasking, overwhelmed, dropped responsibilities</span>
+            </div>
+            <div class="anchor-body">
+              <div class="anchor-quote">"I tried to multitask and do a little bit of everything at once. I got completely overwhelmed, shut down, and forgot to submit the most important assignment."</div>
+              <div class="anchor-note">Participant describes a failure to prioritize, chaotic multitasking, and dropped responsibilities.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-section" id="guide-section-instructions">
+        <div class="modal-section-title">Grading Instructions</div>
+
+        <p style="font-size:12.5px;color:#374151;line-height:1.6;margin-bottom:12px">
+          You will evaluate each response using <strong>two separate tools</strong>: the
+          <strong>STAR Structure Checklist</strong> (measures how the answer was formatted) and the
+          <strong>BARS</strong> (measures the quality of the competency demonstrated). Grade them independently.
+        </p>
+
+        <div class="rule-box">
+          <div class="rule-num">1</div>
+          <div class="rule-text"><strong>Look for evidence, not eloquence.</strong> Do not penalize for stuttering or filler words, and do not reward smooth delivery. Grade strictly on the presence or absence of the required elements.</div>
+        </div>
+        <div class="rule-box">
+          <div class="rule-num">2</div>
+          <div class="rule-text"><strong>Track accumulation (STAR scores).</strong> Each level (1–5) builds on the previous one. A participant earns a higher score only by successfully accumulating the required elements defined in the rubric.</div>
+        </div>
+        <div class="rule-box">
+          <div class="rule-num">3</div>
+          <div class="rule-text"><strong>Set your BARS baseline.</strong> Always read the Score 3 (Average) anchor first before grading. Then decide if the response is above, below, or at that level. Give a 1, 3, or 5 for a clear match; give a 2 or 4 if the response falls strictly between two anchors.</div>
+        </div>
+        <div class="rule-box">
+          <div class="rule-num">4</div>
+          <div class="rule-text"><strong>Avoid Halo bias.</strong> Grade BARS quality completely independent of structure. A beautifully formatted STAR answer can still demonstrate a poor (score 1) strategy. A rambling response can still show excellent judgment.</div>
+        </div>
+        <div class="rule-box">
+          <div class="rule-num">5</div>
+          <div class="rule-text"><strong>STAR Checklist is presence-only.</strong> Mark Yes if the component appears at all — even weakly. "I just worked faster" still earns Yes for Action. Reserve the 1–5 detail score for quality.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_Q1 = `During an internship I did this past summer, we had a project where the deadline was in about a couple weeks and we had to coordinate between teams and not just the Chicago office, but also the Dallas and New York office. The project was essentially putting together a consulting presentation to help a nonprofit meet new goals and kind of improve their revenue for the upcoming year. And what I did to meet the deadline was essentially make sure to touch base with the team every day, whether over a meeting or just, you know, through our teams chat and made sure that every single person knew what they were, what they were gonna work on that day. I would also try to check in throughout each day and make sure that we were making progress and sort of on schedule to meet our upcoming deadline. And this was also kind of helpful to figure out where people needed help, where people might have kind of finished a little bit early and can potentially help someone else out. And yeah, ultimately that led to us being able to meet our deadline and with some extra time we had to, we were able to kind of, you know, go above and beyond a little bit as we seek feedback before we were even, you know, submitting and presenting to project manager.`;
+
+const DEFAULT_Q2 = `Paste the participant's Q2 transcript here.`;
+
+const BARS_META = {
+  q1: {
+    title: 'BARS Score — Q1',
+    prompt: '"Tell me about a time when you had to meet a challenging deadline. What did you do?"',
+    ref: [
+      ['5 – Excellent', '#059669', 'Strategic planning, resource negotiation, quantifiable outcome ("delivered 2 days early")'],
+      ['4 – Good',      '#3b82f6', 'Some organization but lacks high-level strategic negotiation or delegation'],
+      ['3 – Average',   '#d97706', 'Brute-force effort / longer hours; met deadline but no systemic planning'],
+      ['2 – Marginal',  '#f97316', 'Struggled significantly, barely managed to finish'],
+      ['1 – Poor',      '#ef4444', 'Poor planning, panic, or missed the deadline entirely'],
+    ]
+  },
+  q2: {
+    title: 'BARS Score — Q2',
+    prompt: '"Tell me about a time when you had too many things to do and you were required to prioritize your tasks."',
+    ref: [
+      ['5 – Excellent', '#059669', 'Logical framework (urgency/importance), stakeholder communication, delegation; all critical tasks done'],
+      ['4 – Good',      '#3b82f6', 'Prioritized well but did not actively manage external stakeholder expectations'],
+      ['3 – Average',   '#d97706', 'Basic to-do list, arbitrary prioritization, got most things done'],
+      ['2 – Marginal',  '#f97316', 'Attempted to organize but still dropped some important tasks'],
+      ['1 – Poor',      '#ef4444', 'Chaotic multitasking, got overwhelmed, dropped responsibilities'],
+    ]
+  }
+};
+
+const GRADE_FIELDS = ['g_s_yn','g_s_sc','g_t_yn','g_t_sc','g_a_yn','g_a_sc','g_r_yn','g_r_sc','g_bars'];
+
+let participants = {};
+let currentPid = null;
+let currentQ = 'q1';
+let gradingStep = 1;
+let isEditing = false;
+let savedRange = null;
+let activeHighlightSpan = null;
+let mdPos = { x: 0, y: 0 };
+
+const transcriptEl = document.getElementById('transcript');
+
+// ── Init ──
+function init() {
+  if (!participants['Example']) {
+    participants['Example'] = {
+      q1: { html: null, transcript: DEFAULT_Q1, grades: {} },
+      q2: { html: null, transcript: DEFAULT_Q2, grades: {} }
+    };
+  }
+
+  const raw = localStorage.getItem('prolific_v3');
+  if (raw) {
+    const stored = JSON.parse(raw);
+    Object.keys(stored).forEach(pid => { participants[pid] = stored[pid]; });
+    if (!participants['Example']) {
+      participants['Example'] = {
+        q1: { html: null, transcript: DEFAULT_Q1, grades: {} },
+        q2: { html: null, transcript: DEFAULT_Q2, grades: {} }
+      };
+    }
+  }
+
+  // Populate hidden header select
+  const headerSel = document.getElementById('participantSelect');
+  Object.keys(participants).sort().forEach(pid => {
+    if (!headerSel.querySelector(`option[value="${pid}"]`)) {
+      const opt = document.createElement('option');
+      opt.value = pid; opt.textContent = pid;
+      headerSel.appendChild(opt);
+    }
+  });
+  if (!headerSel.querySelector('option[value="Example"]')) {
+    const opt = document.createElement('option');
+    opt.value = 'Example'; opt.textContent = 'Example (Demo)';
+    headerSel.insertBefore(opt, headerSel.options[1]);
+  }
+
+  transcriptEl.innerHTML = '';
+}
+
+// ── Screen flow ──
+let landingPid = null;
+let surveyAnswers = {};
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('active'); el.scrollTop = 0; }
+}
+
+function hideAllScreens() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+}
+
+function beginFlow() {
+  showScreen('surveyScreen');
+}
+
+// ── Survey ──
+function svSelect(groupId, el, val) {
+  document.querySelectorAll(`#${groupId} .sv-opt`).forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  surveyAnswers[groupId] = val;
+  const group = document.getElementById(groupId);
+  if (group) { group.style.outline = ''; group.style.borderRadius = ''; }
+}
+
+function surveyNext() {
+  const required = ['sv-q1','sv-q2','sv-q3','sv-q4','sv-q5'];
+  const missing = required.filter(id => !surveyAnswers[id]);
+  if (missing.length > 0) {
+    missing.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.outline = '2px solid #ef4444'; el.style.borderRadius = '8px'; }
+    });
+    return;
+  }
+  tutGo(1);
+  showScreen('tutorialScreen');
+}
+
+// ── Interactive Tour ──
+let tourActive = false;
+let tourStepIdx = 0;
+
+let tourHighlightClicked = false;
+let tourHighlightRemoved = false;
+
+// Pre-built example annotations matching DEFAULT_Q1 — restored after clear steps
+const EXAMPLE_HIGHLIGHTED_HTML = `<span class="hl hl-s" data-frame="S">During an internship I did this past summer<span class="hl-badge">S</span></span>, we had a project where <span class="hl hl-t" data-frame="T">the deadline was in about a couple weeks<span class="hl-badge">T</span></span> and we had to coordinate between teams and <span class="hl hl-s" data-frame="S">not just the Chicago office, but also the Dallas and New York office<span class="hl-badge">S</span></span>. <span class="hl hl-t" data-frame="T">The project was essentially putting together a consulting presentation to help a nonprofit meet new goals<span class="hl-badge">T</span></span> and kind of improve their revenue for the upcoming year. And <span class="hl hl-a" data-frame="A">what I did to meet the deadline was essentially make sure to touch base with the team every day<span class="hl-badge">A</span></span>, whether over a meeting or just, you know, through our teams chat and <span class="hl hl-a" data-frame="A">made sure that every single person knew what they were, what they were gonna work on that day<span class="hl-badge">A</span></span>. <span class="hl hl-a" data-frame="A">I would also try to check in throughout each day and make sure that we were making progress<span class="hl-badge">A</span></span> and sort of on schedule to meet our upcoming deadline. And this was also kind of helpful to figure out where people needed help, where people might have kind of finished a little bit early and can potentially help someone else out. And yeah, <span class="hl hl-r" data-frame="R">ultimately that led to us being able to meet our deadline<span class="hl-badge">R</span></span> and with some extra time we had to, <span class="hl hl-r" data-frame="R">we were able to kind of, you know, go above and beyond a little bit<span class="hl-badge">R</span></span> as we seek feedback before we were even, you know, submitting and presenting to project manager.`;
+
+function restoreExampleHighlights() {
+  transcriptEl.innerHTML = EXAMPLE_HIGHLIGHTED_HTML;
+  reattachAll();
+  if (currentPid && participants[currentPid]) {
+    participants[currentPid][currentQ].html = transcriptEl.innerHTML;
+  }
+}
+
+const TOUR_STEPS = [
+  {
+    msg: 'Welcome to the practice session! You\'ll grade this <strong>Example interview</strong> by following these guided steps. First, <strong>read the transcript</strong> on the left.',
+    target: 'transcript',
+    pos: 'left',
+    actionLabel: 'Got it, start →',
+    manual: true
+  },
+  {
+    msg: '<strong>Step 1 — Highlight the Situation (S)</strong><br>Click and drag to select text describing the <em>background or context</em> of the story, then click <strong>S — Situation</strong> in the popup. Only S counts here.',
+    target: 'transcript',
+    pos: 'left',
+    frame: 's',
+    completeFn: () => getAnnotatedFrames().has('s')
+  },
+  {
+    msg: '<strong>Highlight the Task (T)</strong><br>Select text describing the <em>specific goal</em> the candidate had to accomplish, then click <strong>T — Task</strong> in the popup.',
+    target: 'transcript',
+    pos: 'left',
+    frame: 't',
+    completeFn: () => getAnnotatedFrames().has('t')
+  },
+  {
+    msg: '<strong>Highlight the Action (A)</strong><br>Select text describing the <em>specific steps</em> the candidate took, then click <strong>A — Action</strong> in the popup.',
+    target: 'transcript',
+    pos: 'left',
+    frame: 'a',
+    completeFn: () => getAnnotatedFrames().has('a')
+  },
+  {
+    msg: '<strong>Highlight the Result (R)</strong><br>Select text describing the <em>outcome</em> of the candidate\'s actions, then click <strong>R — Result</strong> in the popup.',
+    target: 'transcript',
+    pos: 'left',
+    frame: 'r',
+    completeFn: () => getAnnotatedFrames().has('r')
+  },
+  {
+    msg: '<strong>Editing a highlight</strong><br>Click <em>any</em> existing colored highlight in the transcript now — a popup will appear so you can relabel or remove it.',
+    target: 'transcript',
+    pos: 'left',
+    completeFn: () => tourHighlightClicked
+  },
+  {
+    msg: 'The popup lets you <strong>relabel</strong> by clicking a different frame letter, or <strong>delete</strong> the annotation with the red <em>Remove highlight</em> button at the bottom. Click <strong>Remove highlight</strong> now.',
+    target: 'removeHlBtn',
+    pos: 'top',
+    completeFn: () => tourHighlightRemoved
+  },
+  {
+    msg: 'Good — one highlight removed. Now click the <strong>Clear</strong> button in the toolbar above the transcript to wipe all remaining highlights at once.',
+    target: 'clearBtn',
+    pos: 'top',
+    completeFn: () => document.querySelectorAll('#transcript .hl').length === 0
+  },
+  {
+    msg: 'All highlights cleared. Let\'s restore the example annotations so the scoring steps that follow make sense.',
+    target: null,
+    pos: 'center',
+    actionLabel: 'Restore Highlights →',
+    manual: true,
+    onAction: () => { restoreExampleHighlights(); advanceTour(); }
+  },
+  {
+    msg: 'All four STAR frames are back. Now click <strong>Next →</strong> in the grading panel to move to scoring.',
+    target: 'gNextBtn',
+    pos: 'top',
+    completeFn: () => gradingStep === 2
+  },
+  {
+    msg: '<strong>Step 2 — Score 1–5</strong><br>Rate each STAR frame from 1 (very poor) to 5 (excellent). Select a score for all four frames.',
+    target: 'gsp-2',
+    pos: 'left',
+    completeFn: () => ['s','t','a','r'].every(f => !!document.querySelector(`input[name="g_${f}_sc"]:checked`))
+  },
+  {
+    msg: 'All scores entered! Click <strong>Next →</strong> to continue to the BARS rating.',
+    target: 'gNextBtn',
+    pos: 'top',
+    completeFn: () => gradingStep === 3
+  },
+  {
+    msg: '<strong>Step 3 — BARS Rating</strong><br>Select the behaviorally anchored rating that best describes this overall interview answer.',
+    target: 'gsp-3',
+    pos: 'left',
+    completeFn: () => !!document.querySelector('input[name="g_bars"]:checked')
+  },
+  {
+    msg: 'BARS selected! Click <strong>Next →</strong> to continue.',
+    target: 'gNextBtn',
+    pos: 'top',
+    completeFn: () => gradingStep === 4
+  },
+  {
+    msg: '<strong>Step 4 — STAR Present?</strong><br>Was each STAR component present in this response? Select <strong>Yes</strong> or <strong>No</strong> for each.',
+    target: 'gsp-4',
+    pos: 'left',
+    completeFn: () => ['s','t','a','r'].every(f => !!document.querySelector(`input[name="g_${f}_yn"]:checked`))
+  },
+  {
+    msg: 'All done! Click <strong>Complete ✓</strong> to finish grading this example.',
+    target: 'gNextBtn',
+    pos: 'top',
+    completeFn: () => gradingStep === 'done'
+  },
+  {
+    msg: '🎉 <strong>Tutorial complete!</strong><br>You\'ve successfully graded the example interview. You\'re ready to grade real participants.',
+    target: null,
+    pos: 'center',
+    actionLabel: 'Begin Grading →',
+    manual: true,
+    onAction: () => { endTour(); showParticipantList(); }
+  }
+];
+
+function startTour() {
+  tourActive = true;
+  tourStepIdx = 0;
+  // Reset Example to clean state
+  participants['Example'] = {
+    q1: { html: null, transcript: DEFAULT_Q1, grades: {} },
+    q2: { html: null, transcript: DEFAULT_Q2, grades: {} }
+  };
+  landingPid = 'Example';
+  hideAllScreens();
+  document.getElementById('headerPidGroup').style.display = 'flex';
+  document.getElementById('devResetBtn').style.display = '';
+  document.getElementById('pidIndicator').textContent = 'Example (Tutorial)';
+  const headerSel = document.getElementById('participantSelect');
+  headerSel.value = 'Example';
+  currentQ = 'q1';
+  onParticipantChange('Example');
+  setTimeout(() => showTourStep(0), 400);
+}
+
+function showTourStep(idx) {
+  if (!tourActive) return;
+  tourStepIdx = idx;
+  const step = TOUR_STEPS[idx];
+  if (!step) return;
+
+  tourHighlightClicked = false;
+  tourHighlightRemoved = false;
+
+  // Remove spotlight from previous target
+  document.querySelectorAll('.tour-spotlight').forEach(el => el.classList.remove('tour-spotlight'));
+
+  const card = document.getElementById('tourCard');
+  document.getElementById('tourBadge').textContent = `Tutorial · Step ${idx + 1} of ${TOUR_STEPS.length}`;
+  document.getElementById('tourMsg').innerHTML = step.msg;
+  document.getElementById('tourProgress').textContent = `${idx + 1} / ${TOUR_STEPS.length}`;
+
+  const actionBtn = document.getElementById('tourActionBtn');
+  if (step.manual) {
+    actionBtn.style.display = '';
+    actionBtn.textContent = step.actionLabel || 'Next →';
+  } else {
+    actionBtn.style.display = 'none';
+  }
+
+  card.style.display = 'block';
+
+  if (step.target) {
+    const target = document.getElementById(step.target);
+    if (target) {
+      target.classList.add('tour-spotlight');
+      positionTourCard(target, step.pos, card);
+    }
+  } else if (step.pos === 'center') {
+    card.style.top = '50%';
+    card.style.left = '50%';
+    card.style.transform = 'translate(-50%, -50%)';
+  }
+}
+
+function positionTourCard(target, pos, card) {
+  card.style.transform = '';
+  const rect = target.getBoundingClientRect();
+  const cardW = 310, margin = 18;
+  const cardH = Math.max(card.offsetHeight || 0, 220);
+
+  const clampX = x => Math.max(10, Math.min(x, window.innerWidth  - cardW - 10));
+  const clampY = y => Math.max(60, Math.min(y, window.innerHeight - cardH - 10));
+
+  if (pos === 'left') {
+    const leftPos = rect.left - cardW - margin;
+    card.style.left = clampX(leftPos > 10 ? leftPos : rect.right + margin) + 'px';
+    card.style.top  = clampY(rect.top) + 'px';
+  } else if (pos === 'top') {
+    card.style.left = clampX(rect.left + rect.width / 2 - cardW / 2) + 'px';
+    const topPos = rect.top - cardH - margin;
+    card.style.top  = clampY(topPos > 10 ? topPos : rect.bottom + margin) + 'px';
+  } else {
+    card.style.left = clampX(rect.left) + 'px';
+    card.style.top  = clampY(rect.bottom + margin) + 'px';
+  }
+}
+
+function tourActionClick() {
+  const step = TOUR_STEPS[tourStepIdx];
+  if (step && step.onAction) { step.onAction(); return; }
+  advanceTour();
+}
+
+function advanceTour() {
+  if (!tourActive) return;
+  const next = tourStepIdx + 1;
+  if (next >= TOUR_STEPS.length) { endTour(); return; }
+  showTourStep(next);
+}
+
+function tourCheck() {
+  if (!tourActive) return;
+  const step = TOUR_STEPS[tourStepIdx];
+  if (!step || step.manual || !step.completeFn) return;
+  if (step.completeFn()) {
+    setTimeout(advanceTour, 400);
+  }
+}
+
+function skipTour() {
+  endTour();
+  showParticipantList();
+}
+
+function endTour() {
+  tourActive = false;
+  document.querySelectorAll('.tour-spotlight').forEach(el => el.classList.remove('tour-spotlight'));
+  document.getElementById('tourCard').style.display = 'none';
+  if (currentPid) document.getElementById('pidIndicator').textContent = currentPid;
+}
+
+// ── Participant list ──
+function showParticipantList() {
+  renderParticipantList();
+  showScreen('participantListScreen');
+}
+
+function renderParticipantList() {
+  const grid = document.getElementById('plistGrid');
+  grid.innerHTML = '';
+  Object.keys(participants).sort().forEach(pid => {
+    const pdata = participants[pid];
+    const card = document.createElement('div');
+    card.className = 'plist-card';
+
+    function qStatus(q) {
+      const qd = pdata[q] || {};
+      const step = qd.step || 1;
+      const grades = qd.grades || {};
+      if (step === 'done') return 'done';
+      if (step > 1 || Object.keys(grades).length > 0) return 'prog';
+      return 'none';
+    }
+    const q1s = qStatus('q1'), q2s = qStatus('q2');
+    const badgeMap = { done: ['plist-bd-done','Done'], prog: ['plist-bd-prog','In progress'], none: ['plist-bd-none','Not started'] };
+
+    card.innerHTML = `
+      <div class="plist-card-id">${pid}</div>
+      <div class="plist-status">
+        <div class="plist-status-row"><span>Q1</span><span class="plist-badge ${badgeMap[q1s][0]}">${badgeMap[q1s][1]}</span></div>
+        <div class="plist-status-row"><span>Q2</span><span class="plist-badge ${badgeMap[q2s][0]}">${badgeMap[q2s][1]}</span></div>
+      </div>
+      <button class="plist-grade-btn" onclick="beginGrading('${pid}')">
+        ${(q1s === 'done' && q2s === 'done') ? 'Review' : (q1s === 'none' && q2s === 'none') ? 'Begin Grading' : 'Continue Grading'}
+      </button>`;
+    grid.appendChild(card);
+  });
+  if (!grid.children.length) {
+    grid.innerHTML = '<div class="plist-empty">No participants yet. Click "+ Add Participant" to add one.</div>';
+  }
+}
+
+function addParticipantFromList() {
+  const id = prompt('Enter new participant ID (e.g. P001):');
+  if (!id || !id.trim()) return;
+  const pid = id.trim();
+  if (!participants[pid]) {
+    participants[pid] = {
+      q1: { html: null, transcript: DEFAULT_Q1, grades: {} },
+      q2: { html: null, transcript: DEFAULT_Q2, grades: {} }
+    };
+    const sel = document.getElementById('participantSelect');
+    if (!sel.querySelector(`option[value="${pid}"]`)) {
+      const opt = document.createElement('option');
+      opt.value = pid; opt.textContent = pid;
+      sel.appendChild(opt);
+    }
+  }
+  renderParticipantList();
+}
+
+function beginGrading(pid) {
+  landingPid = pid;
+  startGrading();
+}
+
+function skipToGrading() {
+  document.getElementById('onboardingModal').classList.remove('show');
+  landingPid = 'Example';
+  showParticipantList();
+}
+
+function skipToTour() {
+  document.getElementById('onboardingModal').classList.remove('show');
+  startTour();
+}
+
+function startGrading() {
+  if (!landingPid) return;
+  hideAllScreens();
+  document.getElementById('headerPidGroup').style.display = 'flex';
+  document.getElementById('devResetBtn').style.display = '';
+  document.getElementById('pidIndicator').textContent = landingPid;
+  const headerSel = document.getElementById('participantSelect');
+  headerSel.value = landingPid;
+  onParticipantChange(landingPid);
+}
+
+// ── Participant management ──
+function onParticipantChange(pid) {
+  if (currentPid) persist(true);
+  currentPid = pid || null;
+  if (!pid) { transcriptEl.innerHTML = ''; return; }
+
+  if (!participants[pid]) {
+    participants[pid] = {
+      q1: { html: null, transcript: DEFAULT_Q1, grades: {} },
+      q2: { html: null, transcript: DEFAULT_Q2, grades: {} }
+    };
+  }
+  document.getElementById('pidIndicator').textContent = pid;
+  loadQ(currentQ);
+}
+
+function addParticipant() {
+  const id = prompt('Enter participant ID (e.g. P001):');
+  if (!id || !id.trim()) return;
+  const pid = id.trim();
+  const sel = document.getElementById('participantSelect');
+  if (!sel.querySelector(`option[value="${pid}"]`)) {
+    const opt = document.createElement('option');
+    opt.value = pid; opt.textContent = pid;
+    sel.appendChild(opt);
+  }
+  sel.value = pid;
+  onParticipantChange(pid);
+}
+
+// ── Q switching ──
+function switchQ(q) {
+  if (currentPid) persist(true);
+  currentQ = q;
+  document.getElementById('tab-q1').classList.toggle('active', q === 'q1');
+  document.getElementById('tab-q2').classList.toggle('active', q === 'q2');
+  document.getElementById('gradingHeader').textContent = `Grading — ${q.toUpperCase()}`;
+  if (currentPid) loadQ(q);
+}
+
+function loadQ(q) {
+  const qdata = participants[currentPid][q];
+
+  if (qdata.html) {
+    transcriptEl.innerHTML = qdata.html;
+    reattachAll();
+  } else {
+    transcriptEl.innerText = qdata.transcript;
+  }
+
+  restoreGrades(qdata.grades || {});
+
+  const meta = BARS_META[q];
+  document.getElementById('barsPrompt').textContent = meta.prompt;
+  document.getElementById('barsRef').innerHTML = meta.ref.map(([label, color, desc]) =>
+    `<div class="bars-ref-row"><span class="brs" style="color:${color}">${label}</span><span class="brd">${desc}</span></div>`
+  ).join('');
+
+  setGradingStep(qdata.step || 1);
+  updateSummary();
+}
+
+// ── Grades ──
+function restoreGrades(grades) {
+  GRADE_FIELDS.forEach(name => {
+    document.querySelectorAll(`input[name="${name}"]`).forEach(el => {
+      el.checked = (grades[name] === el.value);
+    });
+  });
+}
+
+function collectGrades() {
+  const g = {};
+  GRADE_FIELDS.forEach(name => {
+    const el = document.querySelector(`input[name="${name}"]:checked`);
+    if (el) g[name] = el.value;
+  });
+  return g;
+}
+
+// ── Persist ──
+function persist(silent = false) {
+  if (!currentPid) return;
+  const qdata = participants[currentPid][currentQ];
+  qdata.html = transcriptEl.innerHTML;
+  qdata.grades = collectGrades();
+  qdata.step = gradingStep;
+  localStorage.setItem('prolific_v3', JSON.stringify(participants));
+  if (!silent) flashSave();
+}
+
+function saveData() { persist(false); }
+
+function flashSave() {
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = '✓ Saved';
+  btn.classList.add('hbtn-green');
+  setTimeout(() => { btn.textContent = 'Save'; btn.classList.remove('hbtn-green'); }, 1500);
+}
+
+// ── Edit mode ──
+function clearAnnotations() {
+  if (!tourActive && !confirm('Remove all highlights from this transcript?')) return;
+  transcriptEl.innerText = transcriptEl.innerText;
+  if (currentPid) participants[currentPid][currentQ].html = null;
+  if (tourActive) setTimeout(tourCheck, 100);
+}
+
+function devReset() {
+  if (!currentPid) return;
+  if (!confirm(`DEV: Reset ALL grading for "${currentPid}" back to step 1? This clears annotations and scores.`)) return;
+  participants[currentPid] = {
+    q1: { html: null, transcript: DEFAULT_Q1, grades: {} },
+    q2: { html: null, transcript: DEFAULT_Q2, grades: {} }
+  };
+  localStorage.setItem('prolific_v3', JSON.stringify(participants));
+  loadQ(currentQ);
+}
+
+// ── Transcript events ──
+transcriptEl.addEventListener('mousedown', e => { mdPos = { x: e.clientX, y: e.clientY }; });
+
+transcriptEl.addEventListener('mouseup', e => {
+  if (isEditing) return;
+  if (gradingStep !== 1) return; // lock after annotate step
+
+  const sel = window.getSelection();
+  const hasSel = sel && !sel.isCollapsed && sel.toString().trim().length > 0;
+  const dx = Math.abs(e.clientX - mdPos.x);
+  const dy = Math.abs(e.clientY - mdPos.y);
+
+  if (hasSel) {
+    const range = sel.getRangeAt(0).cloneRange();
+    snapToWordBoundaries(range);
+    const snapped = range.toString().trim();
+    if (!snapped.length) return;
+    sel.removeAllRanges();
+    sel.addRange(range);
+    savedRange = range;
+    activeHighlightSpan = null;
+    showFramePopup(e.clientX, e.clientY, false);
+    return;
+  }
+
+  if (dx < 5 && dy < 5) {
+    const hlSpan = e.target.closest('.hl');
+    if (hlSpan) {
+      activeHighlightSpan = hlSpan;
+      savedRange = null;
+      showFramePopup(e.clientX, e.clientY, true);
+    }
+  }
+});
+
+function snapToWordBoundaries(range) {
+  const isWordChar = c => /\w/.test(c);
+
+  // Snap start backward to beginning of word
+  const startNode = range.startContainer;
+  if (startNode.nodeType === Node.TEXT_NODE) {
+    const text = startNode.textContent;
+    let offset = range.startOffset;
+    while (offset > 0 && isWordChar(text[offset - 1])) offset--;
+    range.setStart(startNode, offset);
+  }
+
+  // Snap end forward to end of word
+  const endNode = range.endContainer;
+  if (endNode.nodeType === Node.TEXT_NODE) {
+    const text = endNode.textContent;
+    let offset = range.endOffset;
+    while (offset < text.length && isWordChar(text[offset])) offset++;
+    range.setEnd(endNode, offset);
+  }
+}
+
+document.addEventListener('mousedown', e => {
+  const fp = document.getElementById('framePopup');
+  if (!fp.contains(e.target) && !transcriptEl.contains(e.target)) hideFramePopup();
+});
+
+// ── Frame popup ──
+function showFramePopup(x, y, isExisting) {
+  document.getElementById('removeHlBtn').style.display = isExisting ? '' : 'none';
+  const popup = document.getElementById('framePopup');
+  popup.classList.add('show');
+  positionPopup(popup, x, y);
+  if (isExisting && tourActive) {
+    tourHighlightClicked = true;
+    tourCheck();
+  }
+}
+function hideFramePopup() {
+  document.getElementById('framePopup').classList.remove('show');
+  activeHighlightSpan = null;
+  savedRange = null;
+}
+
+function applyHighlight(frame) {
+  // During tour annotation steps, enforce the required frame for new highlights
+  if (tourActive && !activeHighlightSpan) {
+    const step = TOUR_STEPS[tourStepIdx];
+    if (step && step.frame && frame !== step.frame) {
+      const names = { s: 'Situation (S)', t: 'Task (T)', a: 'Action (A)', r: 'Result (R)' };
+      const msgEl = document.getElementById('tourMsg');
+      if (msgEl) {
+        const orig = msgEl.innerHTML;
+        msgEl.innerHTML = `<span style="color:#ef4444;font-weight:600;">Wrong label.</span> This step needs you to select <strong>${names[step.frame]}</strong>, not ${names[frame]}. Please try again.`;
+        clearTimeout(window._tourWrongTimer);
+        window._tourWrongTimer = setTimeout(() => { if (msgEl) msgEl.innerHTML = orig; }, 3000);
+      }
+      hideFramePopup();
+      return;
+    }
+  }
+
+  if (activeHighlightSpan) {
+    activeHighlightSpan.className = `hl hl-${frame}`;
+    activeHighlightSpan.dataset.frame = frame.toUpperCase();
+    const badge = activeHighlightSpan.querySelector('.hl-badge');
+    if (badge) badge.textContent = frame.toUpperCase();
+    hideFramePopup();
+    return;
+  }
+  if (!savedRange) return;
+
+  const span = document.createElement('span');
+  span.className = `hl hl-${frame}`;
+  span.dataset.frame = frame.toUpperCase();
+  const badge = document.createElement('span');
+  badge.className = 'hl-badge';
+  badge.textContent = frame.toUpperCase();
+
+  try {
+    savedRange.surroundContents(span);
+    span.appendChild(badge);
+  } catch {
+    const frag = savedRange.extractContents();
+    span.appendChild(frag);
+    span.appendChild(badge);
+    savedRange.insertNode(span);
+  }
+
+  attachHighlightListener(span);
+  window.getSelection().removeAllRanges();
+  hideFramePopup();
+  tourCheck();
+}
+
+function removeCurrentHighlight() {
+  if (!activeHighlightSpan) return;
+  const parent = activeHighlightSpan.parentNode;
+  Array.from(activeHighlightSpan.childNodes).forEach(node => {
+    if (!node.classList || !node.classList.contains('hl-badge')) {
+      parent.insertBefore(node, activeHighlightSpan);
+    }
+  });
+  parent.removeChild(activeHighlightSpan);
+  hideFramePopup();
+  if (tourActive) { tourHighlightRemoved = true; setTimeout(tourCheck, 100); }
+}
+
+function attachHighlightListener(span) {
+  span.addEventListener('mouseup', e => {
+    if (isEditing) return;
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed) return;
+    e.stopPropagation();
+    activeHighlightSpan = span;
+    savedRange = null;
+    showFramePopup(e.clientX, e.clientY, true);
+  });
+}
+
+function reattachAll() {
+  document.querySelectorAll('.hl').forEach(attachHighlightListener);
+}
+
+function positionPopup(popup, x, y) {
+  const m = 10;
+  popup.style.left = (x + m) + 'px';
+  popup.style.top = (y + m) + 'px';
+  requestAnimationFrame(() => {
+    const r = popup.getBoundingClientRect();
+    if (r.right > window.innerWidth - m) popup.style.left = (x - r.width - m) + 'px';
+    if (r.bottom > window.innerHeight - m) popup.style.top = (y - r.height - m) + 'px';
+  });
+}
+
+// ── Grading step wizard ──
+function setGradingStep(step) {
+  gradingStep = step;
+
+  const stepNums = [1, 2, 3, 4];
+  stepNums.forEach(n => {
+    const item = document.getElementById(`gsi-${n}`);
+    if (!item) return;
+    item.classList.remove('gs-active', 'gs-done');
+    if (step === 'done' || (typeof step === 'number' && n < step)) {
+      item.classList.add('gs-done');
+    } else if (n === step) {
+      item.classList.add('gs-active');
+    }
+  });
+
+  ['1','2','3','4','done'].forEach(p => {
+    const panel = document.getElementById(`gsp-${p}`);
+    if (panel) panel.classList.toggle('active', String(step) === p);
+  });
+
+  const nextBtn = document.getElementById('gNextBtn');
+  if (step === 'done') {
+    nextBtn.style.display = 'none';
+  } else {
+    nextBtn.style.display = '';
+    nextBtn.classList.toggle('g-btn-complete', step === 4);
+    nextBtn.textContent = step === 4 ? 'Complete ✓' : 'Next →';
+  }
+
+  // Show Clear only on annotate step
+  const clearBtn = document.getElementById('clearBtn');
+  if (clearBtn) clearBtn.style.display = (step === 1) ? '' : 'none';
+
+  // Scroll step content to top on change
+  const scroll = document.querySelector('.g-step-scroll');
+  if (scroll) scroll.scrollTop = 0;
+
+  tourCheck();
+}
+
+function getAnnotatedFrames() {
+  const frames = new Set();
+  document.querySelectorAll('#transcript .hl').forEach(el => {
+    const f = (el.dataset.frame || '').toLowerCase();
+    if (f) frames.add(f);
+  });
+  return frames;
+}
+
+let _confirmResolve = null;
+function showConfirm(msg, okText, cancelText) {
+  return new Promise(resolve => {
+    document.getElementById('cdlgMsg').innerHTML = msg;
+    document.getElementById('cdlgOk').textContent = okText || 'Yes, continue';
+    document.getElementById('cdlgCancel').textContent = cancelText || 'Go back';
+    document.getElementById('confirmDlg').classList.add('show');
+    _confirmResolve = resolve;
+  });
+}
+document.getElementById('cdlgOk').addEventListener('click', () => {
+  document.getElementById('confirmDlg').classList.remove('show');
+  if (_confirmResolve) { _confirmResolve(true); _confirmResolve = null; }
+});
+document.getElementById('cdlgCancel').addEventListener('click', () => {
+  document.getElementById('confirmDlg').classList.remove('show');
+  if (_confirmResolve) { _confirmResolve(false); _confirmResolve = null; }
+});
+
+async function gradingNext() {
+  const frameNames = { s: 'Situation', t: 'Task', a: 'Action', r: 'Result' };
+
+  if (gradingStep === 1) {
+    const present = getAnnotatedFrames();
+    for (const f of ['s','t','a','r']) {
+      if (!present.has(f)) {
+        const ok = await showConfirm(
+          `You haven't highlighted any <strong>${frameNames[f]}</strong> text. Was this intentional — is this frame absent from the response?`,
+          'Yes, skip it', 'Go back'
+        );
+        if (!ok) return;
+      }
+    }
+    const sure = await showConfirm(
+      'Ready to move to scoring? You <strong>cannot go back</strong> to the annotation step.',
+      'Yes, start scoring', 'Not yet'
+    );
+    if (!sure) return;
+    persist(true);
+    setGradingStep(2);
+
+  } else if (gradingStep === 2) {
+    const sure = await showConfirm(
+      'Move on to BARS rating? You <strong>cannot go back</strong> to score editing.',
+      'Yes, continue', 'Not yet'
+    );
+    if (!sure) return;
+    persist(true);
+    setGradingStep(3);
+
+  } else if (gradingStep === 3) {
+    const sure = await showConfirm(
+      'Move on to the presence check? You <strong>cannot go back</strong> to BARS.',
+      'Yes, continue', 'Not yet'
+    );
+    if (!sure) return;
+    persist(true);
+    setGradingStep(4);
+
+  } else if (gradingStep === 4) {
+    const sure = await showConfirm(
+      'Mark this question complete? You <strong>cannot go back</strong> to any previous step.',
+      'Complete', 'Not yet'
+    );
+    if (!sure) return;
+    setGradingStep('done');
+    persist(false);
+    updateSummary();
+    if (currentQ === 'q1') {
+      const goQ2 = await showConfirm(
+        'Q1 is complete! Switch to Q2 to continue grading?',
+        'Go to Q2', 'Stay here'
+      );
+      if (goQ2) switchQ('q2');
+    } else {
+      // Q2 done — check if both done
+      const q1done = (participants[currentPid]?.q1?.step === 'done');
+      if (q1done) {
+        const goList = await showConfirm(
+          'Both questions are complete for this participant! Return to the participant list?',
+          'Back to List', 'Stay here'
+        );
+        if (goList) showParticipantList();
+      }
+    }
+  }
+}
+
+// ── Summary ──
+function updateSummary() {
+  let struct = 0;
+  ['s','t','a','r'].forEach(f => {
+    const yn = document.querySelector(`input[name="g_${f}_yn"]:checked`);
+    const sc = document.querySelector(`input[name="g_${f}_sc"]:checked`);
+    if (yn && yn.value === 'yes') struct++;
+    const ynText = yn ? (yn.value === 'yes' ? 'Yes' : 'No') : '—';
+    const scText = sc ? sc.value : '—';
+    document.getElementById(`sum_${f}`).textContent = `${ynText}  ·  ${scText}/5`;
+  });
+  document.getElementById('sum_struct').textContent = `${struct} / 4`;
+  const bars = document.querySelector('input[name="g_bars"]:checked');
+  document.getElementById('sum_bars').textContent = bars ? `${bars.value} / 5` : '— / 5';
+  updateRubricHighlights();
+}
+
+// ── Instructions modal ──
+function openInstructions(section) {
+  document.getElementById('instructionsModal').classList.add('show');
+  if (section === 'bars') {
+    // Switch to correct Q tab and scroll to BARS section
+    const q = currentQ || 'q1';
+    switchBarsQTab(q);
+    requestAnimationFrame(() => {
+      const el = document.getElementById('guide-section-bars');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+}
+function closeInstructions() {
+  document.getElementById('instructionsModal').classList.remove('show');
+}
+function closeInstructionsOutside(e) {
+  if (e.target === document.getElementById('instructionsModal')) closeInstructions();
+}
+
+function switchBarsQTab(q) {
+  ['q1','q2'].forEach(x => {
+    document.getElementById(`bqtab-${x}`).classList.toggle('active', x === q);
+    document.getElementById(`bqpanel-${x}`).classList.toggle('active', x === q);
+  });
+}
+
+function switchObBarsTab(q) {
+  ['q1','q2'].forEach(x => {
+    document.getElementById(`ob-bqtab-${x}`).classList.toggle('active', x === q);
+    document.getElementById(`ob-bqpanel-${x}`).classList.toggle('active', x === q);
+  });
+}
+
+// ── Onboarding wizard ──
+let obStep    = 1;
+let obSubStep = 0;   // step 2 only: 0=S 1=T 2=A 3=R
+const OB_STEPS = 4;
+const OB_TITLES  = ['STAR Annotation','STAR Detail Rubric (1–5)','BARS Behavioral Anchors','Grading Rules'];
+const STAR_SUBS  = ['s','t','a','r'];
+const STAR_NAMES = ['Situation','Task','Action','Result'];
+
+// ── Linear gate: scroll-to-bottom + 10-second minimum ──
+let gateScrollOk  = false;
+let gateTimerOk   = false;
+let gateTimerSec  = 10;
+let gateTimerTick = null;
+
+function gateStart() {
+  gateScrollOk = false;
+  gateTimerOk  = false;
+  gateTimerSec = 10;
+  clearInterval(gateTimerTick);
+  gateTimerTick = setInterval(() => {
+    gateTimerSec--;
+    if (gateTimerSec <= 0) { clearInterval(gateTimerTick); gateTimerOk = true; }
+    gateRender();
+  }, 1000);
+  requestAnimationFrame(gateCheckScroll);
+  gateRender();
+}
+
+function gateCheckScroll() {
+  const el = document.getElementById(`ob-step-${obStep}`);
+  if (!el) return;
+  if (el.scrollHeight - el.scrollTop <= el.clientHeight + 30) {
+    if (!gateScrollOk) { gateScrollOk = true; gateRender(); }
+  }
+}
+
+function gateRender() {
+  const nextBtn = document.getElementById('ob-next-btn');
+  const hint    = document.getElementById('ob-gate-hint');
+  const canGo   = gateScrollOk && gateTimerOk;
+  nextBtn.disabled = !canGo;
+
+  if (obStep === OB_STEPS) {
+    nextBtn.textContent = 'Begin Grading →';
+    nextBtn.className   = 'ob-begin';
+  } else if (obStep === 2 && obSubStep < 3) {
+    nextBtn.textContent = `${STAR_NAMES[obSubStep + 1]} →`;
+    nextBtn.className   = 'ob-nav-next';
+  } else {
+    nextBtn.textContent = 'Next →';
+    nextBtn.className   = 'ob-nav-next';
+  }
+
+  if (!canGo) {
+    const parts = [];
+    if (!gateTimerOk)  parts.push(`${Math.max(0, gateTimerSec)}s`);
+    if (!gateScrollOk) parts.push('scroll ↓');
+    hint.textContent = parts.join(' · ');
+  } else {
+    hint.textContent = '';
+  }
+}
+
+document.querySelectorAll('.ob-step').forEach(el => {
+  el.addEventListener('scroll', gateCheckScroll, { passive: true });
+});
+
+function obUpdateHeader() {
+  const subLabel = (obStep === 2) ? ` — ${STAR_NAMES[obSubStep]}` : '';
+  document.getElementById('ob-subtitle').textContent     = `Step ${obStep} of ${OB_STEPS} — ${OB_TITLES[obStep-1]}${subLabel}`;
+  document.getElementById('ob-step-counter').textContent = `Step ${obStep} of ${OB_STEPS}`;
+  document.getElementById('ob-back-btn').style.display   = (obStep === 1 && obSubStep === 0) ? 'none' : '';
+}
+
+function obGoTo(n) {
+  obStep = Math.max(1, Math.min(OB_STEPS, n));
+  if (obStep === 2) { obSubStep = 0; obSwitchRubric('s'); }
+
+  for (let i = 1; i <= OB_STEPS; i++) {
+    document.getElementById(`ob-step-${i}`).classList.toggle('active', i === obStep);
+    const dot = document.getElementById(`ob-dot-${i}`);
+    dot.classList.toggle('active', i === obStep);
+    dot.classList.toggle('done', i < obStep);
+  }
+
+  obUpdateHeader();
+  const stepEl = document.getElementById(`ob-step-${obStep}`);
+  if (stepEl) stepEl.scrollTop = 0;
+  gateStart();
+}
+
+function obNext() {
+  if (!(gateScrollOk && gateTimerOk)) return;
+  if (obStep === 2 && obSubStep < 3) {
+    obSubStep++;
+    obSwitchRubric(STAR_SUBS[obSubStep]);
+    const el = document.getElementById('ob-step-2');
+    if (el) el.scrollTop = 0;
+    obUpdateHeader();
+    gateStart();
+    return;
+  }
+  if (obStep === OB_STEPS) {
+    document.getElementById('onboardingModal').classList.remove('show');
+    startTour();
+    return;
+  }
+  obGoTo(obStep + 1);
+}
+
+function obBack() {
+  if (obStep === 2 && obSubStep > 0) {
+    obSubStep--;
+    obSwitchRubric(STAR_SUBS[obSubStep]);
+    const el = document.getElementById('ob-step-2');
+    if (el) el.scrollTop = 0;
+    obUpdateHeader();
+    gateStart();
+    return;
+  }
+  obGoTo(obStep - 1);
+}
+
+function obSwitchRubric(f) {
+  ['s','t','a','r'].forEach(x => {
+    document.getElementById(`ob-rtab-${x}`).classList.toggle('active', x === f);
+    document.getElementById(`ob-rpanel-${x}`).classList.toggle('active', x === f);
+  });
+}
+
+function switchRubricTab(f) {
+  document.querySelectorAll('.rubric-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.rubric-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.rt-${f}`).classList.add('active');
+  document.getElementById(`rpanel-${f}`).classList.add('active');
+}
+
+// ── Mini rubric switcher ──
+let activeRubric = 's';
+function showMiniRubric(f) {
+  ['s','t','a','r'].forEach(x => {
+    document.getElementById(`srmp-${x}`).classList.toggle('active', x === f);
+    document.getElementById(`srm-btn-${x}`).classList.toggle('active', x === f);
+  });
+  activeRubric = f;
+  updateRubricHighlights();
+}
+
+function updateRubricHighlights() {
+  ['s','t','a','r'].forEach(f => {
+    const sc = document.querySelector(`input[name="g_${f}_sc"]:checked`);
+    const val = sc ? parseInt(sc.value) : null;
+    const panel = document.getElementById(`srmp-${f}`);
+    if (!panel) return;
+    panel.querySelectorAll('.srm-row').forEach(row => {
+      const rowScore = parseInt(row.dataset.score);
+      // Remove all sel-* classes then add if matches
+      row.classList.remove('sel-s','sel-t','sel-a','sel-r');
+      if (rowScore === val) row.classList.add(`sel-${f}`);
+    });
+  });
+}
+
+// Auto-switch rubric tab when a score is selected
+document.querySelectorAll('input[name$="_sc"]').forEach(input => {
+  input.addEventListener('change', () => {
+    const f = input.name.split('_')[1]; // g_s_sc → s
+    showMiniRubric(f);
+    tourCheck();
+  });
+});
+
+document.querySelectorAll('input[name="g_bars"], input[name$="_yn"]').forEach(input => {
+  input.addEventListener('change', tourCheck);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeInstructions();
+    hideFramePopup();
+  }
+});
+
+// ── JSON Export ──
+function extractAnnotations(pid, q) {
+  const pdata = participants[pid];
+  if (!pdata || !pdata[q]) return [];
+  const html = pdata[q].html;
+  if (!html) return [];
+
+  // Parse the stored HTML to extract highlight spans
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
+  const root = doc.querySelector('div');
+  const annotations = [];
+  let charOffset = 0;
+
+  function walk(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      charOffset += node.textContent.length;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const isHl = node.classList.contains('hl');
+      const frame = isHl ? (node.dataset.frame || '').toLowerCase() : null;
+      const startOffset = charOffset;
+      node.childNodes.forEach(walk);
+      if (isHl && frame) {
+        annotations.push({
+          frame: frame.toUpperCase(),
+          text: node.textContent,
+          start: startOffset,
+          end: charOffset
+        });
+      }
+    }
+  }
+  root.childNodes.forEach(walk);
+  return annotations;
+}
+
+function buildTokenView(pid, q) {
+  const pdata = participants[pid];
+  if (!pdata || !pdata[q]) return [];
+  const html = pdata[q].html;
+  if (!html) return [];
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
+  const root = doc.querySelector('div');
+  const tokens = [];
+
+  function walk(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const words = node.textContent.match(/\S+|\s+/g) || [];
+      words.forEach(w => { if (w.trim()) tokens.push({ word: w.trim(), frame: null }); });
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const isHl = node.classList.contains('hl');
+      const frame = isHl ? (node.dataset.frame || '').toUpperCase() : null;
+      node.childNodes.forEach(child => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          const words = child.textContent.match(/\S+|\s+/g) || [];
+          words.forEach(w => { if (w.trim()) tokens.push({ word: w.trim(), frame: frame }); });
+        } else { walk(child); }
+      });
+    }
+  }
+  root.childNodes.forEach(walk);
+  return tokens;
+}
+
+function buildUtteranceChunks(pid, q) {
+  const pdata = participants[pid];
+  if (!pdata || !pdata[q]) return [];
+  const html = pdata[q].html;
+  const rawText = html
+    ? (() => { const parser = new DOMParser(); const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html'); return doc.querySelector('div').textContent; })()
+    : (pdata[q].transcript || '');
+
+  const lines = rawText.split('\n').filter(l => l.trim());
+  return lines.map((line, i) => {
+    const spkMatch = line.match(/^(S|T|I)(\d*):\s*/i);
+    return {
+      id: spkMatch ? `${spkMatch[1].toUpperCase()}${spkMatch[2] || (i+1)}` : `U${i+1}`,
+      speaker: spkMatch ? (spkMatch[1].toUpperCase() === 'I' ? 'Interviewer' : 'Subject') : 'Unknown',
+      text: spkMatch ? line.slice(spkMatch[0].length) : line
+    };
+  });
+}
+
+function generateExport() {
+  if (currentPid) persist(true);
+  const frameNames = { s: 'situation', t: 'task', a: 'action', r: 'result' };
+  const barsLabels = { '1':'Poor','2':'Marginal','3':'Average','4':'Good','5':'Excellent' };
+  const out = {};
+  Object.keys(participants).sort().forEach(pid => {
+    out[pid] = { survey: surveyAnswers };
+    ['q1','q2'].forEach(q => {
+      const pq = participants[pid][q] || {};
+      const g = pq.grades || {};
+      const scores = {};
+      ['s','t','a','r'].forEach(f => {
+        scores[frameNames[f]] = {
+          present: g[`g_${f}_yn`] || null,
+          rating: g[`g_${f}_sc`] ? parseInt(g[`g_${f}_sc`]) : null
+        };
+      });
+      const barsVal = g['g_bars'] || null;
+      out[pid][q] = {
+        status: pq.step === 'done' ? 'complete' : (pq.step > 1 ? 'in_progress' : 'not_started'),
+        scores,
+        bars: barsVal ? { value: parseInt(barsVal), label: barsLabels[barsVal] || null } : null,
+        annotations: extractAnnotations(pid, q),
+        tokens: buildTokenView(pid, q),
+        utterances: buildUtteranceChunks(pid, q)
+      };
+    });
+  });
+  return out;
+}
+
+function downloadExport() {
+  const data = generateExport();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `prolific_annotations_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Tutorial screen (STAR how-to + quiz) ──
+let tutStep = 1;
+const TUT_STEPS = 4;
+
+const QUIZ_QUESTIONS = [
+  {
+    text: 'According to the STAR guidelines, which component should make up the <strong>largest portion (~60%)</strong> of a candidate\'s response?',
+    opts: ['S — Situation (~20%)', 'T — Task (~10%)', 'A — Action (~60%)', 'R — Result (~10%)'],
+    correct: 2
+  }
+];
+
+let quizState = { answers: {}, checked: false, passed: false };
+
+function tutGo(step) {
+  tutStep = step;
+
+  for (let i = 1; i <= TUT_STEPS; i++) {
+    const dot = document.getElementById(`tut-dot-${i}`);
+    if (dot) { dot.classList.toggle('active', i === tutStep); dot.classList.toggle('done', i < tutStep); }
+    const stepEl = document.getElementById(`tut-step-${i}`);
+    if (stepEl) stepEl.classList.toggle('active', i === tutStep);
+  }
+
+  const titles = ['The STAR Framework', 'Example STAR Response', 'Tips for Graders', 'Quick Knowledge Check'];
+  const subs   = ['What you\'ll be grading', 'See the components in action', 'What to look for when annotating', 'Test your understanding before continuing'];
+  document.getElementById('tutTitle').textContent    = titles[tutStep - 1];
+  document.getElementById('tutSubtitle').textContent = subs[tutStep - 1];
+
+  const backBtn = document.getElementById('tutBackBtn');
+  const nextBtn = document.getElementById('tutNextBtn');
+  if (backBtn) backBtn.disabled = (tutStep === 1);
+  if (nextBtn) {
+    nextBtn.textContent = (tutStep === TUT_STEPS) ? 'Continue to Instructions →' : 'Next →';
+    nextBtn.disabled    = (tutStep === TUT_STEPS && !quizState.passed);
+  }
+  document.getElementById('tutCounter').textContent = `Step ${tutStep} of ${TUT_STEPS}`;
+
+  const body = document.querySelector('#tutorialScreen .tut-body');
+  if (body) body.scrollTop = 0;
+
+  if (tutStep === TUT_STEPS) renderQuiz();
+}
+
+function tutNext() {
+  if (tutStep < TUT_STEPS) { tutGo(tutStep + 1); return; }
+  if (!quizState.passed) return;
+  openOnboarding();
+}
+
+function tutBack() {
+  if (tutStep > 1) tutGo(tutStep - 1);
+}
+
+function renderQuiz() {
+  quizState = { answers: {}, checked: false, passed: false };
+  const container = document.getElementById('quizContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  QUIZ_QUESTIONS.forEach((q, qi) => {
+    const qDiv = document.createElement('div');
+    qDiv.className = 'quiz-q';
+    qDiv.innerHTML = `
+      <div class="quiz-q-text">${qi + 1}. ${q.text}</div>
+      <div class="quiz-opts" id="quiz-opts-${qi}">
+        ${q.opts.map((opt, oi) => `<div class="quiz-opt" onclick="quizSelect(${qi},${oi},this)">${opt}</div>`).join('')}
+      </div>`;
+    container.appendChild(qDiv);
+  });
+
+  const checkBtn = document.createElement('button');
+  checkBtn.className = 'quiz-check-btn';
+  checkBtn.id = 'quizCheckBtn';
+  checkBtn.textContent = 'Check Answers';
+  checkBtn.disabled = true;
+  checkBtn.onclick = checkQuiz;
+  container.appendChild(checkBtn);
+
+  const resultBar = document.createElement('div');
+  resultBar.className = 'quiz-result-bar';
+  resultBar.id = 'quizResultBar';
+  container.appendChild(resultBar);
+
+  const nextBtn = document.getElementById('tutNextBtn');
+  if (nextBtn) nextBtn.disabled = true;
+}
+
+function quizSelect(qi, oi, el) {
+  if (quizState.checked) return;
+  document.querySelectorAll(`#quiz-opts-${qi} .quiz-opt`).forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  quizState.answers[qi] = oi;
+  const checkBtn = document.getElementById('quizCheckBtn');
+  if (checkBtn) checkBtn.disabled = (Object.keys(quizState.answers).length < QUIZ_QUESTIONS.length);
+}
+
+function checkQuiz() {
+  if (Object.keys(quizState.answers).length < QUIZ_QUESTIONS.length) return;
+  quizState.checked = true;
+  let correct = 0;
+
+  QUIZ_QUESTIONS.forEach((q, qi) => {
+    document.querySelectorAll(`#quiz-opts-${qi} .quiz-opt`).forEach((opt, oi) => {
+      opt.classList.add('locked');
+      if (oi === q.correct) opt.classList.add('correct');
+      else if (oi === quizState.answers[qi]) opt.classList.add('wrong');
+    });
+    if (quizState.answers[qi] === q.correct) correct++;
+  });
+
+  quizState.passed = (correct === QUIZ_QUESTIONS.length);
+  const resultBar = document.getElementById('quizResultBar');
+  if (resultBar) {
+    resultBar.className = `quiz-result-bar show ${quizState.passed ? 'pass' : 'fail'}`;
+    resultBar.textContent = quizState.passed
+      ? `✓ All ${QUIZ_QUESTIONS.length} correct! Click Continue to proceed.`
+      : `${correct} of ${QUIZ_QUESTIONS.length} correct — review the highlighted answers and try again.`;
+  }
+
+  const checkBtn = document.getElementById('quizCheckBtn');
+  if (checkBtn) {
+    if (quizState.passed) {
+      checkBtn.style.display = 'none';
+    } else {
+      checkBtn.textContent = 'Try Again';
+      checkBtn.disabled = false;
+      checkBtn.onclick = () => renderQuiz();
+    }
+  }
+
+  const nextBtn = document.getElementById('tutNextBtn');
+  if (nextBtn) nextBtn.disabled = !quizState.passed;
+}
+
+function openOnboarding() {
+  hideAllScreens();
+  document.getElementById('onboardingModal').classList.add('show');
+  obGoTo(1);
+}
+
+init();
+</script>
+</body>
+</html>
