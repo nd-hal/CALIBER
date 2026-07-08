@@ -22,9 +22,9 @@ services (DynamoDB + S3) and deployment on Elastic Beanstalk.
 │  React SPA │ ◄─────────────────── │  on Elastic Beanstalk│ ◄──────────────── │  (state)    │
 └────────────┘   JSON + JWT (admin) │  + serves built dist/│                   └─────────────┘
       │                             └──────────────────────┘                   ┌─────────────┐
-      │                                        │  presigned GET URLs ─────────► │     S3      │
+      │                                        │ presigned GET URLs ─────────► │     S3      │
       └────────── streams audio directly ─────────────────────────────────────►│ (audio/data)│
-                                                                                └─────────────┘
+                                                                               └─────────────┘
 ```
 
 - **Frontend (`src/`)** — a Vite SPA with two experiences: the annotator flow (`App.jsx`) and a
@@ -73,11 +73,6 @@ eb deploy caliber-part-env  # deploy to Elastic Beanstalk
 See `.env.example` for required environment variables. Health check: `/health`.
 
 ---
-
-## Citation
-
-This platform accompanies a system-demonstration paper (EMNLP 2026, under review).
-Citation details will be added on acceptance.
 
 ## Contact
 
