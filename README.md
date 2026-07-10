@@ -9,6 +9,8 @@ This README focuses on how the platform is **built and operated**. For the study
 design see [`SURVEY_CODEBOOK.md`](SURVEY_CODEBOOK.md); for the full architecture reference with
 diagrams see [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
+**Website:** [https://www.caliber-assess.org](https://www.caliber-assess.org)
+
 ---
 
 ## System Overview
