@@ -5,11 +5,11 @@ interview responses. It presents each annotator with an LLM's proposed STAR
 (Situation–Task–Action–Result) highlights and scores **pre-populated**, turning annotation into
 an *edit-and-confirm* task.
 
+**Website:** [https://www.caliber-assess.org](https://www.caliber-assess.org)
+
 This README focuses on how the platform is **built and operated**. For the study/annotation
 design see [`SURVEY_CODEBOOK.md`](SURVEY_CODEBOOK.md); for the full architecture reference with
 diagrams see [`ARCHITECTURE.md`](ARCHITECTURE.md).
-
-**Website:** [https://www.caliber-assess.org](https://www.caliber-assess.org)
 
 ---
 
